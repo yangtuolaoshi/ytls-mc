@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "ytls:block/obsidian_block_model" }
+  }
+}
