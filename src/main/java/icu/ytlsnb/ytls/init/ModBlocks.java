@@ -1,5 +1,7 @@
 package icu.ytlsnb.ytls.init;
 
+import icu.ytlsnb.ytls.block.BaguaFurnaceBlock;
+import icu.ytlsnb.ytls.block.JinguBangRodBlock;
 import icu.ytlsnb.ytls.block.ObsidianBlock;
 import icu.ytlsnb.ytls.block.entityblock.ObsidianCounter;
 import net.minecraft.core.registries.Registries;
@@ -18,6 +20,9 @@ public final class ModBlocks {
             "obsidian_counter",
             () -> new ObsidianCounter(BlockBehaviour.Properties.of().strength(20F, 1500F))
     );
+
+    public static final RegistryObject<Block> BAGUA_FURNACE = BLOCKS.register("bagua_furnace", BaguaFurnaceBlock::new);
+    public static final RegistryObject<Block> PLACED_JINGU_BANG = BLOCKS.register("placed_jingu_bang", JinguBangRodBlock::new);
 
     private ModBlocks() {
     }

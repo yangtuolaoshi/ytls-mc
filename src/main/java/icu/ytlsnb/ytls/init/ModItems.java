@@ -1,10 +1,15 @@
 package icu.ytlsnb.ytls.init;
 
+import icu.ytlsnb.ytls.item.BaguaSlagItem;
+import icu.ytlsnb.ytls.item.JiuchiDingpaItem;
+import icu.ytlsnb.ytls.item.MiniBaguaFurnaceItem;
 import icu.ytlsnb.ytls.item.ModArmorMaterials;
 import icu.ytlsnb.ytls.item.ObsidianApple;
 import icu.ytlsnb.ytls.item.ObsidianIngot;
 import icu.ytlsnb.ytls.item.ObsidianPickaxe;
 import icu.ytlsnb.ytls.item.ObsidianSword;
+import icu.ytlsnb.ytls.item.RuyiJinguBangItem;
+import icu.ytlsnb.ytls.item.XianDanItem;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -45,6 +50,16 @@ public final class ModItems {
             "obsidian_counter",
             () -> new BlockItem(ModBlocks.OBSIDIAN_COUNTER.get(), new Item.Properties())
     );
+
+    public static final RegistryObject<Item> BAGUA_FURNACE = ITEMS.register(
+            "bagua_furnace",
+            () -> new BlockItem(ModBlocks.BAGUA_FURNACE.get(), new Item.Properties().fireResistant())
+    );
+    public static final RegistryObject<Item> BAGUA_SLAG = ITEMS.register("bagua_slag", BaguaSlagItem::new);
+    public static final RegistryObject<Item> RUYI_JINGU_BANG = ITEMS.register("ruyi_jingu_bang", RuyiJinguBangItem::new);
+    public static final RegistryObject<Item> JIUCHI_DINGPA = ITEMS.register("jiuchi_dingpa", JiuchiDingpaItem::new);
+    public static final RegistryObject<Item> XIAN_DAN = ITEMS.register("xian_dan", XianDanItem::new);
+    public static final RegistryObject<Item> MINI_BAGUA_FURNACE = ITEMS.register("mini_bagua_furnace", MiniBaguaFurnaceItem::new);
 
     private ModItems() {
     }

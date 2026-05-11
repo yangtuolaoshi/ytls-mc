@@ -29,6 +29,12 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.OBSIDIAN_BOOTS.get());
                         output.accept(ModItems.OBSIDIAN_BLOCK.get());
                         output.accept(ModItems.OBSIDIAN_COUNTER.get());
+                        output.accept(ModItems.BAGUA_FURNACE.get());
+                        output.accept(ModItems.BAGUA_SLAG.get());
+                        output.accept(ModItems.RUYI_JINGU_BANG.get());
+                        output.accept(ModItems.JIUCHI_DINGPA.get());
+                        output.accept(ModItems.XIAN_DAN.get());
+                        output.accept(ModItems.MINI_BAGUA_FURNACE.get());
                     })
                     .build()
     );

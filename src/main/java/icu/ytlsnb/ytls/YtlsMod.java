@@ -2,6 +2,7 @@ package icu.ytlsnb.ytls;
 
 import icu.ytlsnb.ytls.core.ModConstants;
 import icu.ytlsnb.ytls.init.ModBusSetup;
+import icu.ytlsnb.ytls.network.ModNetwork;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
@@ -13,5 +14,6 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 public final class YtlsMod {
     public YtlsMod() {
         ModBusSetup.subscribeDeferredRegisters(FMLJavaModLoadingContext.get().getModEventBus());
+        ModNetwork.register();
     }
 }

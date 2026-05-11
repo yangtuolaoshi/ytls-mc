@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "lit=false": { "model": "ytls:block/bagua_furnace" },
+    "lit=true": { "model": "ytls:block/bagua_furnace_lit" }
+  }
+}

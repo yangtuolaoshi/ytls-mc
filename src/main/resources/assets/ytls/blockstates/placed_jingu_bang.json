@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=down": { "model": "ytls:block/placed_jingu_bang", "x": 180 },
+    "facing=up": { "model": "ytls:block/placed_jingu_bang" },
+    "facing=north": { "model": "ytls:block/placed_jingu_bang", "x": 90, "y": 180 },
+    "facing=south": { "model": "ytls:block/placed_jingu_bang", "x": 90 },
+    "facing=west": { "model": "ytls:block/placed_jingu_bang", "x": 90, "y": 90 },
+    "facing=east": { "model": "ytls:block/placed_jingu_bang", "x": 90, "y": 270 }
+  }
+}
