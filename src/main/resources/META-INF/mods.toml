@@ -1,0 +1,8 @@
+modLoader="javafml"
+loaderVersion="[34,)"
+license="GNU GPLv3"
+[[mods]]
+modId="ytls"
+version="0.0.1"
+displayName="YTLS_NB"
+description='''羊驼老师的创意mod'''

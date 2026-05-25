@@ -1,0 +1,16 @@
+package icu.ytlsnb.ytls.framework.network.annotation;
+
+import icu.ytlsnb.ytls.framework.network.api.NetworkDirection;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface NetworkMessage {
+    String id();
+
+    NetworkDirection direction() default NetworkDirection.BIDIRECTIONAL;
+}
