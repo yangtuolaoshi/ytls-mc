@@ -1,14 +1,21 @@
 package icu.ytlsnb.ytls.framework.debug;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import icu.ytlsnb.ytls.ModConstants;
+import icu.ytlsnb.ytls.framework.component.ComponentAccess;
 import icu.ytlsnb.ytls.framework.registry.ForgeRegistryProvider;
 import icu.ytlsnb.ytls.framework.registry.RegistryAccess;
+import icu.ytlsnb.ytls.framework.skill.SkillCaster;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
+import icu.ytlsnb.ytls.framework.worldrule.WorldRuleEngine;
+import icu.ytlsnb.ytls.gameplay.component.PlayerStatsComponent;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -49,7 +56,45 @@ public final class DebugCommands {
                             ctx.getSource().sendSuccess(() -> Component.literal(
                                     "Config reload requested. Restart world or use /forge config reload if available."), false);
                             return 1;
-                        }));
+                        }))
+                .then(Commands.literal("skill")
+                        .then(Commands.literal("cast")
+                                .then(Commands.argument("id", StringArgumentType.string())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = ctx.getSource().getPlayer();
+                                            if (player == null) {
+                                                return 0;
+                                            }
+                                            String skillId = StringArgumentType.getString(ctx, "id");
+                                            boolean ok = SkillCaster.tryCast(player, skillId);
+                                            ctx.getSource().sendSuccess(() -> Component.literal(
+                                                    ok ? "Skill cast started: " + skillId : "Skill cast failed: " + skillId), false);
+                                            return ok ? 1 : 0;
+                                        }))))
+                .then(Commands.literal("rule")
+                        .then(Commands.literal("toggle")
+                                .then(Commands.argument("id", StringArgumentType.string())
+                                        .executes(ctx -> {
+                                            String ruleId = StringArgumentType.getString(ctx, "id");
+                                            boolean next = !WorldRuleEngine.isEnabled(ruleId);
+                                            WorldRuleEngine.setEnabled(ruleId, next);
+                                            ctx.getSource().sendSuccess(() -> Component.literal(
+                                                    "Rule " + ruleId + " -> " + (next ? "enabled" : "disabled")), false);
+                                            return 1;
+                                        }))))
+                .then(Commands.literal("component")
+                        .then(Commands.literal("stats")
+                                .executes(ctx -> {
+                                    Player player = ctx.getSource().getPlayer();
+                                    if (player == null) {
+                                        return 0;
+                                    }
+                                    PlayerStatsComponent stats = ComponentAccess.getOrCreate(player, PlayerStatsComponent.type());
+                                    stats.exampleValue++;
+                                    ctx.getSource().sendSuccess(() -> Component.literal(
+                                            "player_stats.exampleValue = " + stats.exampleValue), false);
+                                    return 1;
+                                })));
         dispatcher.register(root);
         LOG.info("Registered debug commands under /ytls");
     }

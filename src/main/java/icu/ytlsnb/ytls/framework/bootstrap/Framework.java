@@ -10,6 +10,9 @@ import icu.ytlsnb.ytls.framework.registry.ForgeRegistryProvider;
 import icu.ytlsnb.ytls.framework.registry.RegistryAccess;
 import icu.ytlsnb.ytls.framework.registry.RegistryScanner;
 import icu.ytlsnb.ytls.framework.sync.SyncHelper;
+import icu.ytlsnb.ytls.framework.component.ComponentRegistry;
+import icu.ytlsnb.ytls.framework.skill.SkillRegistry;
+import icu.ytlsnb.ytls.framework.worldrule.WorldRuleEngine;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
@@ -52,7 +55,13 @@ public final class Framework {
         NetworkAccess.bind(networkChannel);
         SyncHelper.bind(networkChannel);
 
-        // 4. 生命周期与事件
+        // 4. 第二优先级：组件 / 技能 / 世界规则
+        ComponentRegistry.scanAndRegister(FRAMEWORK_PACKAGE);
+        ComponentRegistry.scanAndRegister(GAMEPLAY_PACKAGE);
+        SkillRegistry.scanAndRegister(GAMEPLAY_PACKAGE);
+        WorldRuleEngine.scanAndRegister(GAMEPLAY_PACKAGE);
+
+        // 5. 生命周期与事件
         lifecycleManager.scanAndRegister();
         lifecycleManager.bindModBus(modBus);
         lifecycleManager.bindForgeBus(net.minecraftforge.common.MinecraftForge.EVENT_BUS);

@@ -5,6 +5,8 @@
 > **详细教程请参阅：**
 > - [框架快速上手指南.md](doc/框架快速上手指南.md)
 > - [第一优先级模块说明.md](doc/第一优先级模块说明.md)
+> - [第二优先级模块说明.md](doc/第二优先级模块说明.md)
+> - [框架测试指南.md](doc/框架测试指南.md)
 
 ## 设计目标
 
@@ -25,7 +27,12 @@
 | `framework.config` | 配置管理 |
 | `framework.data` | 数据生成 |
 | `framework.debug` | 调试命令与开关 |
-| `gameplay.*` | 创意 Mod 业务代码（block/item/network/config/common） |
+| `framework.component` | 组件/Capability 挂载 |
+| `framework.ai` | 行为树式 AI |
+| `framework.skill` | 技能施法与冷却 |
+| `framework.worldrule` | 世界规则引擎 |
+| `framework.render` | 客户端表现（服务端触发） |
+| `gameplay.*` | 创意 Mod 业务代码 |
 
 ## 扩展示例
 

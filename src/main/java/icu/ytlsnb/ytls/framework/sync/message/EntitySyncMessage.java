@@ -4,6 +4,8 @@ import icu.ytlsnb.ytls.framework.network.annotation.NetworkMessage;
 import icu.ytlsnb.ytls.framework.network.api.NetworkContext;
 import icu.ytlsnb.ytls.framework.network.api.NetworkDirection;
 import icu.ytlsnb.ytls.framework.network.api.NetworkPayload;
+import icu.ytlsnb.ytls.framework.component.ComponentAccess;
+import icu.ytlsnb.ytls.framework.skill.SkillCaster;
 import icu.ytlsnb.ytls.framework.sync.SyncHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -27,9 +29,8 @@ public final class EntitySyncMessage extends NetworkPayload {
             if (entity == null) {
                 return;
             }
-            // 业务层可将组件挂在 entity 的 persistent data 或自定义 capability；
-            // 此处演示框架通道，实际项目可扩展 SyncTarget 绑定。
-            SyncHelper.apply(entity, entity, fieldValues);
+            ComponentAccess.get(entity, SkillCaster.stateType())
+                    .ifPresent(state -> SyncHelper.apply(entity, state, fieldValues));
         });
     }
 }
