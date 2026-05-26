@@ -20,7 +20,7 @@ import java.util.Map;
  * 框架内部语义事件总线，业务层通过 {@link Listen} 注解订阅。
  */
 public final class GameEventBus {
-    private static final Logger LOG = FrameworkLog.of("event");
+    private static final Logger LOG = FrameworkLog.events();
 
     private final Map<GameEventType, List<EventHandler>> handlers = new EnumMap<>(GameEventType.class);
 

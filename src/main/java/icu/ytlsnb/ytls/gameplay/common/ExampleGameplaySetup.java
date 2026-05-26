@@ -4,8 +4,10 @@ import icu.ytlsnb.ytls.framework.bootstrap.LifecyclePhase;
 import icu.ytlsnb.ytls.framework.bootstrap.annotation.OnLifecycle;
 import icu.ytlsnb.ytls.framework.event.annotation.Listen;
 import icu.ytlsnb.ytls.framework.event.api.GameEventType;
+import icu.ytlsnb.ytls.framework.event.events.LevelLoadEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerLoginEvent;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
 /**
@@ -25,5 +27,15 @@ public final class ExampleGameplaySetup {
     @Listen(GameEventType.PLAYER_LOGIN)
     public static void onPlayerLogin(PlayerLoginEvent event) {
         LOG.info("Player login: {}", event.player().getName().getString());
+    }
+
+    @OnLifecycle(LifecyclePhase.WORLD_LOAD)
+    public static void onWorldLoad(ServerLevel level) {
+        LOG.info("World loaded: {}", level.dimension().location());
+    }
+
+    @Listen(GameEventType.LEVEL_LOAD)
+    public static void onLevelLoadEvent(LevelLoadEvent event) {
+        LOG.debug("Level load event: {}", event.level().dimension().location());
     }
 }

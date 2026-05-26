@@ -39,7 +39,9 @@ public final class ComponentRegistry {
         if (typesById.containsKey(location)) {
             throw new IllegalStateException("Duplicate component type: " + id);
         }
-        ComponentType<T> type = new ComponentType<>(id, () -> instantiate(clazz), targets);
+        @SuppressWarnings("unchecked")
+        Class<T> componentClass = (Class<T>) clazz;
+        ComponentType<T> type = new ComponentType<>(id, componentClass, () -> instantiate(clazz), targets);
         typesById.put(location, type);
         LOG.info("Registered component type: {}", location);
     }
@@ -70,6 +72,18 @@ public final class ComponentRegistry {
 
     public static Map<ResourceLocation, ComponentType<?>> allTypes() {
         return Map.copyOf(typesById);
+    }
+
+    /**
+     * 根据组件实例类型查找已注册的 {@link ComponentType}（用于通用同步）。
+     */
+    public static java.util.Optional<ComponentType<?>> findTypeForInstance(GameComponent component) {
+        for (ComponentType<?> type : typesById.values()) {
+            if (type.componentClass().isInstance(component)) {
+                return java.util.Optional.of(type);
+            }
+        }
+        return java.util.Optional.empty();
     }
 
     private static <T extends GameComponent> T instantiate(Class<?> clazz) {

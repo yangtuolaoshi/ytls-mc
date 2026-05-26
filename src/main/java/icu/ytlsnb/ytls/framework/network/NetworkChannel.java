@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  * Forge 1.20.4 SimpleChannel 实现，自动注册带 {@link NetworkMessage} 注解的消息类。
  */
 public final class NetworkChannel {
-    private static final Logger LOG = FrameworkLog.of("network");
+    private static final Logger LOG = FrameworkLog.network();
 
     private final SimpleChannel channel;
     private final Map<String, Class<? extends NetworkPayload>> classById = new HashMap<>();
@@ -73,7 +73,7 @@ public final class NetworkChannel {
             registerDirectionTyped(clazz, factory, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
         }
 
-        LOG.info("Registered network message '{}' -> {} ({})", messageId, clazz.getSimpleName(), direction);
+        FrameworkLog.networkDebug("Registered network message '{}' -> {} ({})", messageId, clazz.getSimpleName(), direction);
     }
 
     @SuppressWarnings("unchecked")
@@ -109,5 +109,14 @@ public final class NetworkChannel {
 
     public void sendToAllPlayers(NetworkPayload payload) {
         channel.send(payload, PacketDistributor.ALL.noArg());
+    }
+
+    /**
+     * 向指定玩家发送（用于实体同步等场景）。
+     */
+    public void sendToPlayers(NetworkPayload payload, Iterable<ServerPlayer> players) {
+        for (ServerPlayer player : players) {
+            sendToPlayer(payload, player);
+        }
     }
 }

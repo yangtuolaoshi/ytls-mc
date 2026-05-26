@@ -12,11 +12,13 @@ import java.util.function.Supplier;
  */
 public final class ComponentType<T extends GameComponent> {
     private final ResourceLocation id;
+    private final Class<T> componentClass;
     private final Supplier<T> factory;
     private final Set<ComponentTarget> targets;
 
-    public ComponentType(String name, Supplier<T> factory, ComponentTarget... targets) {
+    public ComponentType(String name, Class<T> componentClass, Supplier<T> factory, ComponentTarget... targets) {
         this.id = ModResources.loc(name);
+        this.componentClass = componentClass;
         this.factory = factory;
         this.targets = targets.length == 0
                 ? EnumSet.allOf(ComponentTarget.class)
@@ -25,6 +27,10 @@ public final class ComponentType<T extends GameComponent> {
 
     public ResourceLocation id() {
         return id;
+    }
+
+    public Class<T> componentClass() {
+        return componentClass;
     }
 
     public T create() {

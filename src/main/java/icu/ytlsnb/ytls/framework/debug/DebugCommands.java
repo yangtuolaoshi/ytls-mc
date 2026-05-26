@@ -1,13 +1,14 @@
 package icu.ytlsnb.ytls.framework.debug;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import icu.ytlsnb.ytls.ModConstants;
 import icu.ytlsnb.ytls.framework.component.ComponentAccess;
 import icu.ytlsnb.ytls.framework.registry.ForgeRegistryProvider;
 import icu.ytlsnb.ytls.framework.registry.RegistryAccess;
+import icu.ytlsnb.ytls.framework.registry.api.RegistryKind;
 import icu.ytlsnb.ytls.framework.skill.SkillCaster;
+import icu.ytlsnb.ytls.framework.sync.SyncHelper;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
 import icu.ytlsnb.ytls.framework.worldrule.WorldRuleEngine;
 import icu.ytlsnb.ytls.gameplay.component.PlayerStatsComponent;
@@ -20,6 +21,9 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * 框架调试命令，仅在开发环境或显式开启调试时注册。
@@ -36,7 +40,7 @@ public final class DebugCommands {
         if (!DevEnvironment.isDebugActive()) {
             return;
         }
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+        var dispatcher = event.getDispatcher();
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("ytls")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("debug")
@@ -47,14 +51,26 @@ public final class DebugCommands {
                 .then(Commands.literal("registry")
                         .executes(ctx -> {
                             ForgeRegistryProvider provider = RegistryAccess.provider();
-                            int count = provider == null ? 0 : provider.catalog().size();
-                            ctx.getSource().sendSuccess(() -> Component.literal("Registered entries: " + count), false);
+                            if (provider == null) {
+                                ctx.getSource().sendFailure(Component.literal("Registry not initialized"));
+                                return 0;
+                            }
+                            Map<RegistryKind, Integer> counts = new EnumMap<>(RegistryKind.class);
+                            for (var entry : provider.catalog()) {
+                                counts.merge(entry.kind(), 1, Integer::sum);
+                            }
+                            StringBuilder summary = new StringBuilder("Registered entries: ")
+                                    .append(provider.catalog().size());
+                            counts.forEach((kind, count) ->
+                                    summary.append("\n  ").append(kind).append(": ").append(count));
+                            String text = summary.toString();
+                            ctx.getSource().sendSuccess(() -> Component.literal(text), false);
                             return 1;
                         }))
                 .then(Commands.literal("reload-config")
                         .executes(ctx -> {
                             ctx.getSource().sendSuccess(() -> Component.literal(
-                                    "Config reload requested. Restart world or use /forge config reload if available."), false);
+                                    "Use /forge config reload or restart world. Framework fires CONFIG_RELOAD on reload."), false);
                             return 1;
                         }))
                 .then(Commands.literal("skill")
@@ -91,8 +107,9 @@ public final class DebugCommands {
                                     }
                                     PlayerStatsComponent stats = ComponentAccess.getOrCreate(player, PlayerStatsComponent.type());
                                     stats.exampleValue++;
+                                    SyncHelper.markDirty(player, PlayerStatsComponent.type());
                                     ctx.getSource().sendSuccess(() -> Component.literal(
-                                            "player_stats.exampleValue = " + stats.exampleValue), false);
+                                            "player_stats.exampleValue = " + stats.exampleValue + " (synced)"), false);
                                     return 1;
                                 })));
         dispatcher.register(root);

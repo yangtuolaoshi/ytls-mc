@@ -3,7 +3,9 @@ package icu.ytlsnb.ytls.framework.bootstrap;
 import icu.ytlsnb.ytls.framework.bootstrap.annotation.OnLifecycle;
 import icu.ytlsnb.ytls.framework.util.ClasspathScanner;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
@@ -72,6 +74,8 @@ public final class LifecycleManager {
         forgeBus.addListener(this::onServerStarting);
         forgeBus.addListener(this::onServerStarted);
         forgeBus.addListener(this::onServerStopping);
+        forgeBus.addListener(this::onWorldLoad);
+        forgeBus.addListener(this::onWorldUnload);
     }
 
     public void fire(LifecyclePhase phase, Object context) {
@@ -119,6 +123,18 @@ public final class LifecycleManager {
 
     private void onServerStopping(ServerStoppingEvent event) {
         fire(LifecyclePhase.SERVER_STOPPING, event);
+    }
+
+    private void onWorldLoad(LevelEvent.Load event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            fire(LifecyclePhase.WORLD_LOAD, serverLevel);
+        }
+    }
+
+    private void onWorldUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            fire(LifecyclePhase.WORLD_UNLOAD, serverLevel);
+        }
     }
 
     private record LifecycleHandler(Class<?> owner, Method method) {

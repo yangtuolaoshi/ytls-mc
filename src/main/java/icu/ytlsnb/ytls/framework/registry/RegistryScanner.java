@@ -1,11 +1,14 @@
 package icu.ytlsnb.ytls.framework.registry;
 
 import icu.ytlsnb.ytls.framework.registry.annotation.RegisterBlock;
+import icu.ytlsnb.ytls.framework.registry.annotation.RegisterEntity;
 import icu.ytlsnb.ytls.framework.registry.annotation.RegisterEntry;
 import icu.ytlsnb.ytls.framework.registry.annotation.RegisterItem;
+import icu.ytlsnb.ytls.framework.registry.annotation.RegisterSound;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryContributor;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryFacade;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryKind;
+import icu.ytlsnb.ytls.framework.registry.api.RegistrySupplier;
 import icu.ytlsnb.ytls.framework.util.ClasspathScanner;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
 import org.slf4j.Logger;
@@ -18,7 +21,7 @@ import java.util.function.Supplier;
  * 扫描 gameplay 包中带注册注解的类，并自动完成注册。
  */
 public final class RegistryScanner {
-    private static final Logger LOG = FrameworkLog.of("registry-scan");
+    private static final Logger LOG = FrameworkLog.registry();
 
     private RegistryScanner() {
     }
@@ -40,9 +43,23 @@ public final class RegistryScanner {
                 registerInstantiable(registry, RegistryKind.ITEM, item.value(), clazz);
                 continue;
             }
+            RegisterSound sound = clazz.getAnnotation(RegisterSound.class);
+            if (sound != null) {
+                registerSupplier(registry, RegistryKind.SOUND, sound.value(), clazz);
+                continue;
+            }
+            RegisterEntity entity = clazz.getAnnotation(RegisterEntity.class);
+            if (entity != null) {
+                registerSupplier(registry, RegistryKind.ENTITY, entity.value(), clazz);
+                continue;
+            }
             RegisterEntry entry = clazz.getAnnotation(RegisterEntry.class);
             if (entry != null) {
-                registerInstantiable(registry, entry.kind(), entry.value(), clazz);
+                if (RegistryKind.BLOCK == entry.kind() || RegistryKind.ITEM == entry.kind()) {
+                    registerInstantiable(registry, entry.kind(), entry.value(), clazz);
+                } else {
+                    registerSupplier(registry, entry.kind(), entry.value(), clazz);
+                }
             }
         }
     }
@@ -82,5 +99,29 @@ public final class RegistryScanner {
         };
         registry.register(kind, name, supplier);
         LOG.info("Auto-registered {} as {} ({})", clazz.getSimpleName(), kind, name);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> void registerSupplier(RegistryFacade registry, RegistryKind kind, String name, Class<?> clazz) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalStateException("Registry name missing on " + clazz.getName());
+        }
+        if (!RegistrySupplier.class.isAssignableFrom(clazz)) {
+            throw new IllegalStateException(
+                    clazz.getName() + " must implement RegistrySupplier for kind " + kind);
+        }
+        Supplier<T> supplier = () -> {
+            try {
+                Constructor<?> ctor = clazz.getDeclaredConstructor();
+                ctor.setAccessible(true);
+                @SuppressWarnings("rawtypes")
+                RegistrySupplier raw = (RegistrySupplier) ctor.newInstance();
+                return (T) raw.get();
+            } catch (Exception ex) {
+                throw new IllegalStateException("Failed to create registry supplier: " + clazz.getName(), ex);
+            }
+        };
+        registry.register(kind, name, supplier);
+        LOG.info("Auto-registered supplier {} as {} ({})", clazz.getSimpleName(), kind, name);
     }
 }

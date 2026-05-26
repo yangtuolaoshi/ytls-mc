@@ -1,5 +1,10 @@
 package icu.ytlsnb.ytls.framework.sync;
 
+import icu.ytlsnb.ytls.framework.component.ComponentAccess;
+import icu.ytlsnb.ytls.framework.component.ComponentRegistry;
+import icu.ytlsnb.ytls.framework.component.api.ComponentType;
+import icu.ytlsnb.ytls.framework.component.api.GameComponent;
+import icu.ytlsnb.ytls.framework.component.api.GameComponent;
 import icu.ytlsnb.ytls.framework.network.NetworkChannel;
 import icu.ytlsnb.ytls.framework.sync.annotation.SyncField;
 import icu.ytlsnb.ytls.framework.sync.message.EntitySyncMessage;
@@ -28,12 +33,24 @@ public final class SyncHelper {
         networkChannel = channel;
     }
 
-    public static void markDirty(Entity entity, Object dataHolder) {
+    /**
+     * 按组件类型同步实体上的组件数据（推荐用法）。
+     */
+    public static void markDirty(Entity entity, ComponentType<?> componentType) {
+        ComponentAccess.get(entity, componentType).ifPresent(component ->
+                markDirty(entity, componentType.id().getPath(), component));
+    }
+
+    /**
+     * 同步任意带 {@link SyncField} 的数据持有者（需指定组件类型 ID 供客户端定位）。
+     */
+    public static void markDirty(Entity entity, String componentTypeId, Object dataHolder) {
         if (!(entity.level() instanceof ServerLevel serverLevel)) {
             return;
         }
         EntitySyncMessage message = new EntitySyncMessage();
         message.entityId = entity.getId();
+        message.componentTypeId = componentTypeId;
         message.fieldValues = collectFieldValues(dataHolder);
 
         for (ServerPlayer player : serverLevel.players()) {
@@ -41,7 +58,23 @@ public final class SyncHelper {
                 networkChannel.sendToPlayer(message, player);
             }
         }
-        LOG.debug("Synced entity {} fields to {} players", entity.getId(), serverLevel.players().size());
+        FrameworkLog.networkDebug("Synced entity {} component {} to {} players",
+                entity.getId(), componentTypeId, serverLevel.players().size());
+    }
+
+    /**
+     * @deprecated 请使用 {@link #markDirty(Entity, ComponentType)} 或 {@link #markDirty(Entity, String, Object)}
+     */
+    @Deprecated
+    public static void markDirty(Entity entity, Object dataHolder) {
+        if (!(dataHolder instanceof GameComponent component)) {
+            LOG.warn("Cannot sync: not a GameComponent: {}", dataHolder.getClass().getName());
+            return;
+        }
+        ComponentRegistry.findTypeForInstance(component)
+                .ifPresentOrElse(
+                        type -> markDirty(entity, type),
+                        () -> LOG.warn("Cannot sync: no component type registered for {}", component.getClass().getName()));
     }
 
     public static void apply(Entity entity, Object dataHolder, Map<String, String> fieldValues) {

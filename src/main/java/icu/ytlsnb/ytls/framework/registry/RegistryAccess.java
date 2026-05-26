@@ -2,6 +2,7 @@ package icu.ytlsnb.ytls.framework.registry;
 
 import icu.ytlsnb.ytls.framework.registry.api.RegistryFacade;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryKind;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
@@ -24,6 +25,10 @@ public final class RegistryAccess {
 
     public static Item item(String name) {
         return provider.resolve(RegistryKind.ITEM, name);
+    }
+
+    public static SoundEvent sound(String name) {
+        return provider.resolve(RegistryKind.SOUND, name);
     }
 
     public static RegistryFacade facade() {

@@ -5,6 +5,7 @@ import icu.ytlsnb.ytls.framework.registry.api.RegistryFacade;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryKind;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
 import icu.ytlsnb.ytls.framework.util.ModResources;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -24,7 +25,7 @@ import java.util.function.Supplier;
  * Forge 1.20.x 注册实现。内部使用 DeferredRegister，对外暴露 RegistryFacade 接口。
  */
 public final class ForgeRegistryProvider implements RegistryFacade {
-    private static final Logger LOG = FrameworkLog.of("registry");
+    private static final Logger LOG = FrameworkLog.registry();
 
     private final Map<RegistryKind, DeferredRegister<?>> deferredRegisters = new EnumMap<>(RegistryKind.class);
     private final Map<RegistryKind, Map<String, Supplier<?>>> entries = new EnumMap<>(RegistryKind.class);
@@ -44,6 +45,13 @@ public final class ForgeRegistryProvider implements RegistryFacade {
             case ENTITY -> DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, ModConstants.MOD_ID);
             case BLOCK_ENTITY -> DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, ModConstants.MOD_ID);
             case SOUND -> DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ModConstants.MOD_ID);
+            case MENU -> DeferredRegister.create(ForgeRegistries.MENU_TYPES, ModConstants.MOD_ID);
+            case MOB_EFFECT -> DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, ModConstants.MOD_ID);
+            case PARTICLE -> DeferredRegister.create(ForgeRegistries.PARTICLE_TYPES, ModConstants.MOD_ID);
+            case ENCHANTMENT -> DeferredRegister.create(ForgeRegistries.ENCHANTMENTS, ModConstants.MOD_ID);
+            case ATTRIBUTE -> DeferredRegister.create(ForgeRegistries.ATTRIBUTES, ModConstants.MOD_ID);
+            case CREATIVE_TAB -> DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ModConstants.MOD_ID);
+            case RECIPE_SERIALIZER -> DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, ModConstants.MOD_ID);
         };
     }
 
@@ -60,7 +68,7 @@ public final class ForgeRegistryProvider implements RegistryFacade {
         RegistryObject<T> holder = deferred.register(name, supplier);
         kindEntries.put(name, holder);
         catalog.add(new RegisteredEntry<>(kind, name, holder));
-        LOG.info("Registered {} -> {}", kind, id(name));
+        FrameworkLog.registryInfo("Registered {} -> {}", kind, id(name));
     }
 
     @Override

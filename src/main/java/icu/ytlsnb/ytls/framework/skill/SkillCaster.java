@@ -44,7 +44,7 @@ public final class SkillCaster {
         state.castTicksRemaining = skill.castTicks();
         state.totalCastTicks = skill.castTicks();
         skill.onCastStart(context);
-        SyncHelper.markDirty(caster, state);
+        SyncHelper.markDirty(caster, stateType());
         LOG.debug("Skill cast started: {} by {}", skillId, caster.getName().getString());
         return true;
     }
@@ -70,7 +70,7 @@ public final class SkillCaster {
             state.totalCastTicks = 0;
             LOG.debug("Skill cast finished: {}", skill.id());
         }
-        SyncHelper.markDirty(entity, state);
+        SyncHelper.markDirty(entity, stateType());
     }
 
     public static SkillStateComponent stateOf(LivingEntity entity) {
