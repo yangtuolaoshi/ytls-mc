@@ -1,0 +1,16 @@
+{
+  "itemGroup.ytls.example_tab": "示例物品栏",
+  "itemGroup.ytls.main": "YTLS 创意",
+
+  "block.ytls.example_block": "示例方块",
+  "item.ytls.example_ingot": "示例锭",
+
+  "effect.ytls.example_brisk": "示例迅捷",
+  "subtitles.ytls.example_chime": "播放示例风铃声",
+
+  "ytls.example_power": "示例力量",
+  "attribute.name.ytls.example_power": "示例力量",
+
+  "skill.ytls.example_slash": "示例斩击",
+  "worldrule.ytls.example_blood_moon": "示例血月"
+}

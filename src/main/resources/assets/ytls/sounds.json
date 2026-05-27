@@ -1,0 +1,8 @@
+{
+  "example_chime": {
+    "subtitle": "subtitles.ytls.example_chime",
+    "sounds": [
+      "ytls:example_chime"
+    ]
+  }
+}

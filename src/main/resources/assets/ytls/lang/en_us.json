@@ -1,0 +1,16 @@
+{
+  "itemGroup.ytls.example_tab": "Example Tab",
+  "itemGroup.ytls.main": "YTLS Creative",
+
+  "block.ytls.example_block": "Example Block",
+  "item.ytls.example_ingot": "Example Ingot",
+
+  "effect.ytls.example_brisk": "Example Brisk",
+  "subtitles.ytls.example_chime": "Example chime plays",
+
+  "ytls.example_power": "Example Power",
+  "attribute.name.ytls.example_power": "Example Power",
+
+  "skill.ytls.example_slash": "Example Slash",
+  "worldrule.ytls.example_blood_moon": "Example Blood Moon"
+}

@@ -1,0 +1,8 @@
+请在本目录添加音效（二进制 OGG）：
+
+  文件名：example_chime.ogg
+  路径：  assets/ytls/sounds/example_chime.ogg
+  格式：  OGG Vorbis（与原版资源一致）
+  用途：  @RegisterSound("example_chime")，sounds.json 已配置
+
+未添加时游戏可启动，播放该音效时无声音或控制台警告。

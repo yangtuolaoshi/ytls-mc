@@ -1,0 +1,8 @@
+请在本目录添加状态效果图标（二进制 PNG）：
+
+  文件名：example_brisk.png
+  路径：  assets/ytls/textures/mob_effect/example_brisk.png
+  尺寸：  18×18（与原版效果图标一致）
+  用途：  @RegisterMobEffect("example_brisk") / ExampleBriskEffect
+
+未添加时效果仍生效，但 HUD 图标可能显示为缺失纹理。

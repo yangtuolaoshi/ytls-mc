@@ -1,0 +1,8 @@
+请在本目录添加粒子贴图（二进制 PNG）：
+
+  文件名：example_sparkle.png
+  路径：  assets/ytls/textures/particle/example_sparkle.png
+  尺寸：  建议 8×8 或 16×16（可含多帧/spritesheet，需同步改 particles JSON）
+  用途：  @RegisterParticle("example_sparkle")，已配置 particles/example_sparkle.json
+
+未添加时注册仍成功，但粒子可能不可见或紫黑块。
