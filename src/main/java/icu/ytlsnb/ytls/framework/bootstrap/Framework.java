@@ -108,6 +108,17 @@ public final class Framework {
         return lifecycleManager;
     }
 
+    /**
+     * 注册在 {@link LifecyclePhase#SHUTDOWN} 阶段执行的清理任务（后注册的先执行）。
+     */
+    public static void registerCleanup(String name, Runnable cleanup) {
+        LifecycleCleanupRegistry.register(name, cleanup);
+    }
+
+    public static void registerCleanup(Runnable cleanup) {
+        LifecycleCleanupRegistry.register(cleanup);
+    }
+
     public static boolean isLoaded() {
         return ModList.get().isLoaded(ModConstants.MOD_ID);
     }

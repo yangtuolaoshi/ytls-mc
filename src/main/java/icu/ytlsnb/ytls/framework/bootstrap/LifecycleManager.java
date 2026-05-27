@@ -123,6 +123,8 @@ public final class LifecycleManager {
 
     private void onServerStopping(ServerStoppingEvent event) {
         fire(LifecyclePhase.SERVER_STOPPING, event);
+        fire(LifecyclePhase.SHUTDOWN, event);
+        LifecycleCleanupRegistry.runAll();
     }
 
     private void onWorldLoad(LevelEvent.Load event) {

@@ -100,9 +100,14 @@ public final class ForgeRegistryProvider implements RegistryFacade {
     public <T> T resolve(RegistryKind kind, String name) {
         Supplier<?> supplier = entries.get(kind).get(name);
         if (supplier == null) {
-            throw new IllegalStateException("Registry entry not found: " + kind + "/" + name);
+            throw new IllegalStateException(
+                    "Registry entry not found: " + kind + "/" + name + " (mod=" + ModConstants.MOD_ID + ")");
         }
         return (T) supplier.get();
+    }
+
+    public boolean isRegistered(RegistryKind kind, String name) {
+        return entries.get(kind).containsKey(name);
     }
 
     private static void validateName(String name) {

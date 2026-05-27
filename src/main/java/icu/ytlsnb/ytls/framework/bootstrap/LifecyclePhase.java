@@ -11,6 +11,10 @@ public enum LifecyclePhase {
     SERVER_STARTING,
     SERVER_STARTED,
     SERVER_STOPPING,
+    /**
+     * 服务端关闭收尾：在 {@link #SERVER_STOPPING} 之后执行，并运行 {@link LifecycleCleanupRegistry} 中注册的任务。
+     */
+    SHUTDOWN,
     WORLD_LOAD,
     WORLD_UNLOAD,
     RESOURCE_RELOAD,

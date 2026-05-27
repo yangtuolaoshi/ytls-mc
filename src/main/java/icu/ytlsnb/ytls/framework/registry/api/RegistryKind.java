@@ -63,6 +63,17 @@ public enum RegistryKind {
     /**
      * 用于数据生成等需要原版 RegistryKey 的场景。
      */
+    /**
+     * 扫描注册时的相对顺序：方块/物品优先，方块实体最后，避免 Supplier 内引用未注册条目。
+     */
+    public int scanOrder() {
+        return switch (this) {
+            case BLOCK, ITEM -> 0;
+            case SOUND, ENTITY, MOB_EFFECT, PARTICLE, ENCHANTMENT, ATTRIBUTE, MENU, RECIPE_SERIALIZER, CREATIVE_TAB -> 10;
+            case BLOCK_ENTITY -> 20;
+        };
+    }
+
     public ResourceKey<? extends net.minecraft.core.Registry<?>> resourceKey() {
         return switch (this) {
             case BLOCK -> Registries.BLOCK;

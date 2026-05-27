@@ -1,10 +1,6 @@
 package icu.ytlsnb.ytls.framework.registry;
 
-import icu.ytlsnb.ytls.framework.registry.annotation.RegisterBlock;
-import icu.ytlsnb.ytls.framework.registry.annotation.RegisterEntity;
 import icu.ytlsnb.ytls.framework.registry.annotation.RegisterEntry;
-import icu.ytlsnb.ytls.framework.registry.annotation.RegisterItem;
-import icu.ytlsnb.ytls.framework.registry.annotation.RegisterSound;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryContributor;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryFacade;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryKind;
@@ -15,10 +11,17 @@ import org.slf4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
  * 扫描 gameplay 包中带注册注解的类，并自动完成注册。
+ * <p>
+ * 支持 12 类 {@link RegistryKind} 的专用注解；扫描按 {@link RegistryKind#scanOrder()} 分阶段执行。
  */
 public final class RegistryScanner {
     private static final Logger LOG = FrameworkLog.registry();
@@ -27,40 +30,54 @@ public final class RegistryScanner {
     }
 
     public static void scanAndRegister(String basePackage, RegistryFacade registry) {
-        scanAnnotatedClasses(basePackage, registry);
+        List<Class<?>> candidates = new ArrayList<>(ClasspathScanner.scanPackage(basePackage));
+        candidates.sort(Comparator.comparingInt(RegistryScanner::scanOrderForClass));
+
+        int registered = 0;
+        for (Class<?> clazz : candidates) {
+            if (tryRegisterClass(registry, clazz)) {
+                registered++;
+            }
+        }
         scanContributors(basePackage, registry);
+        logScanSummary(registry, registered);
     }
 
-    private static void scanAnnotatedClasses(String basePackage, RegistryFacade registry) {
-        for (Class<?> clazz : ClasspathScanner.scanPackage(basePackage)) {
-            RegisterBlock block = clazz.getAnnotation(RegisterBlock.class);
-            if (block != null) {
-                registerInstantiable(registry, RegistryKind.BLOCK, block.value(), clazz);
-                continue;
-            }
-            RegisterItem item = clazz.getAnnotation(RegisterItem.class);
-            if (item != null) {
-                registerInstantiable(registry, RegistryKind.ITEM, item.value(), clazz);
-                continue;
-            }
-            RegisterSound sound = clazz.getAnnotation(RegisterSound.class);
-            if (sound != null) {
-                registerSupplier(registry, RegistryKind.SOUND, sound.value(), clazz);
-                continue;
-            }
-            RegisterEntity entity = clazz.getAnnotation(RegisterEntity.class);
-            if (entity != null) {
-                registerSupplier(registry, RegistryKind.ENTITY, entity.value(), clazz);
-                continue;
-            }
-            RegisterEntry entry = clazz.getAnnotation(RegisterEntry.class);
-            if (entry != null) {
-                if (RegistryKind.BLOCK == entry.kind() || RegistryKind.ITEM == entry.kind()) {
-                    registerInstantiable(registry, entry.kind(), entry.value(), clazz);
-                } else {
-                    registerSupplier(registry, entry.kind(), entry.value(), clazz);
-                }
-            }
+    private static int scanOrderForClass(Class<?> clazz) {
+        return RegistryAnnotationRules.resolveDedicated(clazz)
+                .map(rule -> rule.kind().scanOrder())
+                .orElseGet(() -> {
+                    RegisterEntry entry = clazz.getAnnotation(RegisterEntry.class);
+                    return entry != null ? entry.kind().scanOrder() : Integer.MAX_VALUE;
+                });
+    }
+
+    private static boolean tryRegisterClass(RegistryFacade registry, Class<?> clazz) {
+        var dedicated = RegistryAnnotationRules.resolveDedicated(clazz);
+        if (dedicated.isPresent()) {
+            RegistryAnnotationRules.ResolvedRule rule = dedicated.get();
+            applyRule(registry, rule.kind(), rule.mode(), rule.name(), clazz);
+            return true;
+        }
+        RegisterEntry entry = clazz.getAnnotation(RegisterEntry.class);
+        if (entry != null) {
+            RegistryAnnotationRules.Mode mode = RegistryAnnotationRules.modeForKind(entry.kind());
+            applyRule(registry, entry.kind(), mode, entry.value(), clazz);
+            return true;
+        }
+        return false;
+    }
+
+    private static void applyRule(
+            RegistryFacade registry,
+            RegistryKind kind,
+            RegistryAnnotationRules.Mode mode,
+            String name,
+            Class<?> clazz) {
+        if (mode == RegistryAnnotationRules.Mode.INSTANTIATE) {
+            registerInstantiable(registry, kind, name, clazz);
+        } else {
+            registerSupplier(registry, kind, name, clazz);
         }
     }
 
@@ -79,6 +96,32 @@ public final class RegistryScanner {
         }
     }
 
+    private static void logScanSummary(RegistryFacade registry, int annotatedCount) {
+        if (!(registry instanceof ForgeRegistryProvider provider)) {
+            LOG.info("Registry scan complete: {} annotated class(es)", annotatedCount);
+            return;
+        }
+        Map<RegistryKind, Integer> counts = new EnumMap<>(RegistryKind.class);
+        for (var entry : provider.catalog()) {
+            counts.merge(entry.kind(), 1, Integer::sum);
+        }
+        StringBuilder summary = new StringBuilder("Registry scan complete: ")
+                .append(annotatedCount)
+                .append(" annotated class(es), catalog=");
+        for (RegistryKind kind : RegistryKind.values()) {
+            int count = counts.getOrDefault(kind, 0);
+            if (count > 0) {
+                summary.append(' ').append(kind.name()).append('=').append(count);
+            }
+        }
+        LOG.info(summary.toString());
+        for (RegistryKind kind : RegistryKind.values()) {
+            if (!counts.containsKey(kind)) {
+                LOG.debug("No entries registered for kind {}", kind);
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> void registerInstantiable(RegistryFacade registry, RegistryKind kind, String name, Class<?> clazz) {
         if (name == null || name.isBlank()) {
@@ -86,7 +129,8 @@ public final class RegistryScanner {
         }
         if (!kind.entryClass().isAssignableFrom(clazz)) {
             throw new IllegalStateException(
-                    clazz.getName() + " is not compatible with registry kind " + kind);
+                    clazz.getName() + " is not compatible with registry kind " + kind
+                            + " (expected " + kind.entryClass().getSimpleName() + ")");
         }
         Supplier<T> supplier = () -> {
             try {
@@ -108,7 +152,7 @@ public final class RegistryScanner {
         }
         if (!RegistrySupplier.class.isAssignableFrom(clazz)) {
             throw new IllegalStateException(
-                    clazz.getName() + " must implement RegistrySupplier for kind " + kind);
+                    clazz.getName() + " must implement RegistrySupplier for registry kind " + kind);
         }
         Supplier<T> supplier = () -> {
             try {

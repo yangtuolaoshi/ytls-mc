@@ -24,6 +24,9 @@ public final class AutoLangProvider extends LanguageProvider {
             if (entry.kind() == RegistryKind.ITEM) {
                 add(entry.location().toString(), humanize(entry.name()));
             }
+            if (entry.kind() == RegistryKind.CREATIVE_TAB) {
+                add("itemGroup." + ModConstants.MOD_ID + "." + entry.name(), humanize(entry.name()));
+            }
         }
         add("itemGroup." + ModConstants.MOD_ID + ".main", "YTLS 创意");
     }

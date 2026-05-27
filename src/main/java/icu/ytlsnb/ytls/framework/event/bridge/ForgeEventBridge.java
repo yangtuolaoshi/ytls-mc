@@ -12,6 +12,8 @@ import icu.ytlsnb.ytls.framework.event.events.EntitySpawnEvent;
 import icu.ytlsnb.ytls.framework.event.events.ItemUseEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerDeathEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerHurtEvent;
+import icu.ytlsnb.ytls.framework.event.events.LevelLoadEvent;
+import icu.ytlsnb.ytls.framework.event.events.LevelUnloadEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerLoginEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerLogoutEvent;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
@@ -28,6 +30,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.slf4j.Logger;
@@ -127,6 +130,20 @@ public final class ForgeEventBridge {
         post(GameEventType.BLOCK_PLACE, gameEvent);
         if (gameEvent.isCancelled()) {
             event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public void onLevelLoad(LevelEvent.Load event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            post(GameEventType.LEVEL_LOAD, new LevelLoadEvent(serverLevel));
+        }
+    }
+
+    @SubscribeEvent
+    public void onLevelUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            post(GameEventType.LEVEL_UNLOAD, new LevelUnloadEvent(serverLevel));
         }
     }
 
