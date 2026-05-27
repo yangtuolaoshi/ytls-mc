@@ -1,59 +1,40 @@
 # YTLS（ytls）模组架构说明
 
-本文描述 Minecraft Forge **1.20.4** 工程 `icu.ytlsnb.ytls` 的包结构与扩展方式。
+本文提供仓库级架构速览。完整设计、接入方式与测试说明请参阅：
 
-> **详细教程请参阅：**
-> - [框架快速上手指南.md](doc/框架快速上手指南.md)
-> - [第一优先级模块说明.md](doc/第一优先级模块说明.md)
-> - [第二优先级模块说明.md](doc/第二优先级模块说明.md)
-> - [框架测试指南.md](doc/框架测试指南.md)
+**[doc/YTLS框架介绍与使用手册.md](doc/YTLS框架介绍与使用手册.md)**
+
+需求与验收条款（独立维护，不在手册内重复）：
+
+- [doc/Minecraft Forge开发框架需求文档.md](doc/Minecraft%20Forge开发框架需求文档.md)
+- [doc/框架验收要求.md](doc/框架验收要求.md)
 
 ## 设计目标
 
-- **入口极薄**：`YtlsMod` 仅调用 `Framework.initialize()`，不写业务逻辑。
-- **框架与业务分离**：`framework/` 封装 Forge 底层；`gameplay/` 承载创意玩法。
-- **注解驱动**：注册、事件、网络、配置通过扫描 + 注解自动接入。
-- **版本抽象**：业务层依赖框架接口，Forge 实现可随版本替换。
+- **入口极薄**：`YtlsMod` 仅调用 `Framework.initialize()`。
+- **框架与业务分离**：`framework/` 封装 Forge；`gameplay/` 承载创意玩法。
+- **注解驱动**：注册、事件、网络、配置等通过扫描自动接入。
+- **版本抽象**：业务依赖框架接口，Forge 实现可随版本替换。
 
 ## 包结构一览
 
 | 包路径 | 职责 |
 |--------|------|
-| `icu.ytlsnb.ytls` | 模组入口 `YtlsMod`、`ModConstants` |
-| `framework.bootstrap` | 框架启动、生命周期 |
-| `framework.registry` | 统一注册体系 |
+| `icu.ytlsnb.ytls` | `YtlsMod`、`ModConstants` |
+| `framework.bootstrap` | 启动、生命周期 |
+| `framework.registry` | 统一注册（12 RegistryKind） |
 | `framework.event` | 语义化事件 |
 | `framework.network` / `framework.sync` | 网络与同步 |
-| `framework.config` | 配置管理 |
-| `framework.data` | 数据生成 |
-| `framework.debug` | 调试命令与开关 |
-| `framework.component` | 组件/Capability 挂载 |
-| `framework.ai` | 行为树式 AI |
-| `framework.skill` | 技能施法与冷却 |
-| `framework.worldrule` | 世界规则引擎 |
-| `framework.render` | 客户端表现（服务端触发） |
-| `gameplay.*` | 创意 Mod 业务代码 |
+| `framework.config` / `framework.data` / `framework.debug` | 配置、datagen、调试 |
+| `framework.component` / `framework.ai` / `framework.skill` / `framework.worldrule` / `framework.render` | 第二优先级能力 |
+| `gameplay.*` | 创意 Mod 业务与示例 |
 
-## 扩展示例
+## 启动顺序（摘要）
 
-### 新增物品
+`Framework` 构造：`ConfigManager` → `RegistryScanner` → `NetworkChannel` → 组件/技能/世界规则扫描 → `LifecycleManager` + 事件桥接 → `CONSTRUCT`。
 
-1. 在 `gameplay/item/` 下创建类并标注 `@RegisterItem("name")`
-2. 提供 public 无参构造函数
-3. 可选：运行 `gradlew runData` 生成 lang 与 model
-
-### 新增方块
-
-1. 在 `gameplay/block/` 下创建类并标注 `@RegisterBlock("name")`
-2. 放置贴图到 `assets/ytls/textures/block/<name>.png`
-3. 运行 `gradlew runData`
-
-### 新增网络消息
-
-1. 在 `gameplay/network/` 下创建类 extends `NetworkPayload`
-2. 标注 `@NetworkMessage(id = "...", direction = ...)`
-3. 通过 `NetworkAccess.channel()` 发送
+详见手册 [§4 启动与初始化流程](doc/YTLS框架介绍与使用手册.md#4-启动与初始化流程)。
 
 ---
 
-维护本文档时，若移动包或新增框架入口，请同步更新上表并修订 `doc/` 下教程。
+维护：包结构或 `Framework.initialize` 顺序变更时，请同步更新本文件与《YTLS框架介绍与使用手册.md》。
