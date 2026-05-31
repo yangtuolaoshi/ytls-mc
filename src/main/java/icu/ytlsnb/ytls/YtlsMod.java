@@ -1,6 +1,5 @@
 package icu.ytlsnb.ytls;
 
-import icu.ytlsnb.ytls.core.ModConstants;
 import icu.ytlsnb.ytls.init.ModBusSetup;
 import icu.ytlsnb.ytls.network.ModNetwork;
 import net.minecraftforge.fml.common.Mod;

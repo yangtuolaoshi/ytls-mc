@@ -1,4 +1,4 @@
-package icu.ytlsnb.ytls.core;
+package icu.ytlsnb.ytls;
 
 /**
  * 模组级常量：与 {@code META-INF/mods.toml}、资源命名空间保持一致。
