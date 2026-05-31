@@ -5,6 +5,7 @@ package icu.ytlsnb.ytls;
  */
 public final class ModConstants {
     public static final String MOD_ID = "ytls";
+    public static final String MOD_NAME = "YTLS_NB";
 
     private ModConstants() {
     }

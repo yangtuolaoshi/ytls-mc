@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "BMC",
+    " D "
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:golden_apple"
+    },
+    "B": {
+      "item": "minecraft:honey_bottle"
+    },
+    "M": {
+      "tag": "ytls:milk_buckets"
+    },
+    "C": {
+      "item": "minecraft:egg"
+    },
+    "D": {
+      "item": "minecraft:golden_carrot"
+    }
+  },
+  "result": {
+    "item": "ytls:galactagogue"
+  }
+}

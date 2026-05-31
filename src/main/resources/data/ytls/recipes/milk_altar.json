@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "M M",
+    "SBS",
+    "MSM"
+  ],
+  "key": {
+    "M": {
+      "tag": "ytls:milk_buckets"
+    },
+    "S": {
+      "item": "minecraft:soul_campfire"
+    },
+    "B": {
+      "item": "minecraft:beacon"
+    }
+  },
+  "result": {
+    "item": "ytls:milk_altar"
+  }
+}

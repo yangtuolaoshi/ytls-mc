@@ -1,0 +1,36 @@
+{
+  "itemGroup.ytls": "YTLS",
+  "key.categories.ytls": "YTLS",
+  "key.ytls.use_milk_ability": "使用奶能力",
+  "key.ytls.collect_self_milk": "收集自身奶（按住Shift）",
+
+  "item.ytls.cow_milk_bucket": "牛奶桶（可放置）",
+  "item.ytls.chicken_milk_bucket": "鸡奶桶",
+  "item.ytls.creeper_milk_bucket": "苦力怕奶桶",
+  "item.ytls.enderman_milk_bucket": "末影人奶桶",
+  "item.ytls.villager_milk_bucket": "村民奶桶",
+  "item.ytls.rabbit_milk_bucket": "兔子奶桶",
+  "item.ytls.shulker_milk_bucket": "潜影贝奶桶",
+  "item.ytls.spider_milk_bucket": "蜘蛛奶桶",
+  "item.ytls.dragon_milk_bucket": "末影龙奶桶",
+  "item.ytls.wither_milk_bucket": "凋零奶桶",
+  "item.ytls.player_milk_bucket": "玩家奶桶",
+  "item.ytls.galactagogue": "催乳剂",
+  "item.ytls.milk_altar": "奶神祭坛",
+  "item.ytls.homelander_spawn_egg": "祖国人刷怪蛋",
+
+  "entity.ytls.homelander": "祖国人",
+  "block.ytls.milk_altar": "奶神祭坛",
+
+  "milk_type.ytls.cow_milk": "牛奶",
+  "milk_type.ytls.chicken_milk": "鸡奶",
+  "milk_type.ytls.creeper_milk": "苦力怕奶",
+  "milk_type.ytls.enderman_milk": "末影人奶",
+  "milk_type.ytls.villager_milk": "村民奶",
+  "milk_type.ytls.rabbit_milk": "兔子奶",
+  "milk_type.ytls.shulker_milk": "潜影贝奶",
+  "milk_type.ytls.spider_milk": "蜘蛛奶",
+  "milk_type.ytls.dragon_milk": "末影龙奶",
+  "milk_type.ytls.wither_milk": "凋零奶",
+  "milk_type.ytls.player_milk": "玩家奶"
+}

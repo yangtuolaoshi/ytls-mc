@@ -1,0 +1,230 @@
+package icu.ytlsnb.ytls.system;
+
+import icu.ytlsnb.ytls.entity.HomelanderEntity;
+import icu.ytlsnb.ytls.milk.MilkType;
+import icu.ytlsnb.ytls.registry.ModEntityTypes;
+import icu.ytlsnb.ytls.registry.ModFluids;
+import icu.ytlsnb.ytls.registry.ModItems;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Shulker;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.animal.Chicken;
+import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import java.util.Set;
+
+public final class MilkWorldSystems {
+
+    private MilkWorldSystems() {
+    }
+
+    public static boolean isAnyMilkBucket(ItemStack stack) {
+        for (MilkType type : MilkType.values()) {
+            if (type.resolveBucketItem().map(stack::is).orElse(false)) {
+                return true;
+            }
+        }
+        return stack.is(net.minecraft.world.item.Items.MILK_BUCKET);
+    }
+
+    public static boolean isPlayerMilkBucket(ItemStack stack) {
+        return MilkType.PLAYER.resolveBucketItem().map(stack::is).orElse(false);
+    }
+
+    public static MilkType findMilkForEntity(Entity entity) {
+        if (entity instanceof Chicken) return MilkType.CHICKEN;
+        if (entity instanceof Creeper) return MilkType.CREEPER;
+        if (entity instanceof EnderMan) return MilkType.ENDERMAN;
+        if (entity instanceof Villager) return MilkType.VILLAGER;
+        if (entity instanceof Rabbit) return MilkType.RABBIT;
+        if (entity instanceof Shulker) return MilkType.SHULKER;
+        if (entity instanceof Spider) return MilkType.SPIDER;
+        if (entity instanceof EnderDragon) return MilkType.DRAGON;
+        if (entity instanceof WitherBoss) return MilkType.WITHER;
+        return null;
+    }
+
+    public static boolean canProduceMilk(Entity entity) {
+        if (entity instanceof AgeableMob ageableMob) {
+            return !ageableMob.isBaby();
+        }
+        return true;
+    }
+
+    public static void applyFluidEffects(ServerLevel level, LivingEntity entity, Fluid fluid) {
+        for (MilkType type : MilkType.values()) {
+            if (ModFluids.SOURCE_FLUIDS.get(type).get() == fluid || ModFluids.FLOWING_FLUIDS.get(type).get() == fluid) {
+                if (type != MilkType.CREEPER) {
+                    MilkType.playInstantEffect(level, entity, type);
+                }
+                type.applyStandardEffect(entity, Math.max(type.fluidEffectDurationTicks(), 60));
+                if (type.needsActiveAbility()) {
+                    MilkAbilityManager.grantAbility(entity, type, 20 * 120);
+                }
+            }
+        }
+    }
+
+    public static BlockPos findNearbyMilkFluid(Level level, BlockPos center, int radius) {
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -2; y <= 2; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    mutable.set(center.getX() + x, center.getY() + y, center.getZ() + z);
+                    Fluid fluid = level.getFluidState(mutable).getType();
+                    if (isMilkFluid(fluid)) {
+                        return mutable.immutable();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static boolean isMilkFluid(Fluid fluid) {
+        for (MilkType type : MilkType.values()) {
+            if (ModFluids.SOURCE_FLUIDS.get(type).get() == fluid || ModFluids.FLOWING_FLUIDS.get(type).get() == fluid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void applyMilkRainEffects(ServerLevel level, Set<MilkType> types) {
+        for (Player player : level.players()) {
+            if (!level.canSeeSky(player.blockPosition())) {
+                continue;
+            }
+            for (MilkType type : types) {
+                if (type == MilkType.ENDERMAN) {
+                    long cdUntil = player.getPersistentData().getLong("ytls_rain_enderman_cd");
+                    if (level.getGameTime() >= cdUntil) {
+                        MilkType.playInstantEffect(level, player, type);
+                        player.getPersistentData().putLong("ytls_rain_enderman_cd", level.getGameTime() + 20L);
+                    }
+                } else if (type == MilkType.CREEPER) {
+                    if (level.random.nextBoolean()) {
+                        spawnRandomExplosion(level);
+                    }
+                } else {
+                    type.applyStandardEffect(player, Math.max(80, type.drinkDurationTicks()));
+                    if (type.needsActiveAbility()) {
+                        MilkAbilityManager.grantAbility(player, type, 20 * 180);
+                    }
+                }
+            }
+        }
+
+        if (level.getGameTime() % 40L == 0L) {
+            for (Player player : level.players()) {
+                spawnHomelanderNear(level, player.blockPosition(), 1 + level.random.nextInt(2));
+            }
+        }
+    }
+
+    public static void spawnRandomExplosion(ServerLevel level) {
+        if (level.players().isEmpty()) {
+            return;
+        }
+        Player randomPlayer = level.players().get(level.random.nextInt(level.players().size()));
+        double x = randomPlayer.getX() + (level.random.nextDouble() - 0.5D) * 24.0D;
+        double y = randomPlayer.getY();
+        double z = randomPlayer.getZ() + (level.random.nextDouble() - 0.5D) * 24.0D;
+        level.explode(null, x, y, z, 2.2F, Level.ExplosionInteraction.NONE);
+    }
+
+    public static void triggerCreeperMilkFluidExplosions(ServerLevel level) {
+        if (level.getGameTime() % 20L != 0L) {
+            return;
+        }
+        for (Player player : level.players()) {
+            BlockPos pos = findRandomMilkFluid(level, player.blockPosition(), 12, MilkType.CREEPER);
+            if (pos != null && level.random.nextBoolean()) {
+                level.explode(null, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 2.0F, Level.ExplosionInteraction.NONE);
+            }
+        }
+    }
+
+    private static BlockPos findRandomMilkFluid(Level level, BlockPos center, int radius, MilkType targetType) {
+        Fluid targetSource = ModFluids.SOURCE_FLUIDS.get(targetType).get();
+        Fluid targetFlowing = ModFluids.FLOWING_FLUIDS.get(targetType).get();
+        for (int i = 0; i < 40; i++) {
+            BlockPos pos = center.offset(level.random.nextInt(radius * 2 + 1) - radius, level.random.nextInt(5) - 2, level.random.nextInt(radius * 2 + 1) - radius);
+            Fluid fluid = level.getFluidState(pos).getType();
+            if (fluid == targetSource || fluid == targetFlowing) {
+                return pos;
+            }
+        }
+        return null;
+    }
+
+    public static void spawnHomelanderNear(ServerLevel level, BlockPos nearPos, int count) {
+        for (int i = 0; i < count; i++) {
+            BlockPos spawnPos = nearPos.offset(level.random.nextInt(16) - 8, 0, level.random.nextInt(16) - 8);
+            HomelanderEntity homelander = ModEntityTypes.HOMELANDER.get().create(level);
+            if (homelander != null) {
+                homelander.moveTo(spawnPos, level.random.nextFloat() * 360.0F, 0.0F);
+                level.addFreshEntity(homelander);
+            }
+        }
+    }
+
+    public static void aggroHomelanderForDrinking(Level level, Player player) {
+        if (level.isClientSide) {
+            return;
+        }
+        AABB area = player.getBoundingBox().inflate(16.0D);
+        for (HomelanderEntity homelander : level.getEntitiesOfClass(HomelanderEntity.class, area)) {
+            homelander.setAngryAt(player);
+        }
+    }
+
+    public static boolean tryUseActiveAbility(ServerPlayer player) {
+        Vec3 look = player.getLookAngle();
+        if (MilkAbilityManager.canUse(player, MilkType.DRAGON)) {
+            net.minecraft.world.entity.projectile.DragonFireball fireball = new net.minecraft.world.entity.projectile.DragonFireball(player.level(), player, look.x, look.y, look.z);
+            fireball.moveTo(player.getX(), player.getEyeY(), player.getZ());
+            player.level().addFreshEntity(fireball);
+            MilkAbilityManager.consumeCooldown(player, MilkType.DRAGON, 60);
+            return true;
+        }
+        if (MilkAbilityManager.canUse(player, MilkType.WITHER)) {
+            net.minecraft.world.entity.projectile.WitherSkull skull = new net.minecraft.world.entity.projectile.WitherSkull(player.level(), player, look.x, look.y, look.z);
+            skull.moveTo(player.getX(), player.getEyeY(), player.getZ());
+            player.level().addFreshEntity(skull);
+            MilkAbilityManager.consumeCooldown(player, MilkType.WITHER, 50);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean tryCollectSelfMilk(ServerPlayer player) {
+        if (!player.isShiftKeyDown() || !player.getMainHandItem().is(Items.BUCKET)) {
+            return false;
+        }
+        if (!PlayerLactationManager.consumeForBucket(player)) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.literal("泌乳值不足 1000ml"), true);
+            return false;
+        }
+        player.getMainHandItem().shrink(1);
+        MilkType.PLAYER.resolveBucketItem().ifPresent(item -> player.addItem(new ItemStack(item)));
+        return true;
+    }
+}

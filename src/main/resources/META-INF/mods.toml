@@ -1,8 +1,10 @@
 modLoader="javafml"
-loaderVersion="[34,)"
-license="GNU GPLv3"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
 [[mods]]
-modId="ytls"
-version="0.0.1"
-displayName="YTLS_NB"
-description='''羊驼老师的测试mod'''
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+description='''
+${mod_description}'''

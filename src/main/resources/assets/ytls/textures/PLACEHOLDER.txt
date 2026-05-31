@@ -1,0 +1,8 @@
+请在以下目录补齐资源：
+
+- entity/homelander.png
+- gui/milk_altar.png
+- block/milk_altar.png
+- item/*.png
+
+目前代码已预留所有路径，缺失时会显示紫黑贴图，方便你逐步替换。

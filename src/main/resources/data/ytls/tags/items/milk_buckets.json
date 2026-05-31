@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:milk_bucket",
+    "ytls:cow_milk_bucket",
+    "ytls:chicken_milk_bucket",
+    "ytls:creeper_milk_bucket",
+    "ytls:enderman_milk_bucket",
+    "ytls:villager_milk_bucket",
+    "ytls:rabbit_milk_bucket",
+    "ytls:shulker_milk_bucket",
+    "ytls:spider_milk_bucket",
+    "ytls:dragon_milk_bucket",
+    "ytls:wither_milk_bucket",
+    "ytls:player_milk_bucket"
+  ]
+}
