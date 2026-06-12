@@ -55,6 +55,10 @@ public abstract class MilkFluid extends FlowingFluid {
         return ModFluids.MILK_FLUID_TYPE.get();
     }
 
+    public MilkType getMilkType() {
+        return milkType;
+    }
+
     @Override
     protected boolean canConvertToSource(Level level) {
         return false;

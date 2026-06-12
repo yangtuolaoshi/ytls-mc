@@ -11,7 +11,7 @@ public final class ClientKeyMappings {
         "key.ytls.use_milk_ability",
         KeyConflictContext.IN_GAME,
         InputConstants.Type.KEYSYM,
-        InputConstants.KEY_F,
+        InputConstants.KEY_G,
         "key.categories.ytls"
     );
 

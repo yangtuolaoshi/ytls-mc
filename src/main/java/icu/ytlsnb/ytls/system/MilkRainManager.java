@@ -4,7 +4,12 @@ import icu.ytlsnb.ytls.milk.MilkType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.ScoreHolder;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -13,6 +18,7 @@ import java.util.Set;
 
 public final class MilkRainManager {
 
+    public static final String MILK_RAIN_SCOREBOARD = "ytls_milk_rain";
     private static final Map<ResourceKeyLike, RainState> STATES = new HashMap<>();
 
     private MilkRainManager() {
@@ -46,11 +52,15 @@ public final class MilkRainManager {
             }
         }
         if (state.active) {
+            suppressVanillaRain(level, state);
             if (!state.altarTypes.isEmpty()) {
                 state.types.addAll(state.altarTypes);
             }
             MilkWorldSystems.applyMilkRainEffects(level, state.types);
+        } else if (state.forcedWeather) {
+            restoreVanillaRain(level, state);
         }
+        syncMilkRainFlag(level, state.active);
     }
 
     public static Set<MilkType> getActiveTypes(ServerLevel level) {
@@ -76,6 +86,38 @@ public final class MilkRainManager {
         return STATES.computeIfAbsent(new ResourceKeyLike(level.dimension().location().toString()), key -> new RainState());
     }
 
+    private static void suppressVanillaRain(ServerLevel level, RainState state) {
+        if (!state.forcedWeather || level.isRaining()) {
+            // 奶雨的视觉由自定义奶滴粒子负责，关闭原版蓝色雨幕。
+            level.setWeatherParameters(20 * 120, 0, false, false);
+            state.forcedWeather = true;
+        }
+    }
+
+    private static void restoreVanillaRain(ServerLevel level, RainState state) {
+        level.setWeatherParameters(20 * 120, 0, false, false);
+        state.forcedWeather = false;
+    }
+
+    private static void syncMilkRainFlag(ServerLevel level, boolean active) {
+        Scoreboard scoreboard = level.getScoreboard();
+        Objective objective = scoreboard.getObjective(MILK_RAIN_SCOREBOARD);
+        if (objective == null) {
+            objective = scoreboard.addObjective(
+                MILK_RAIN_SCOREBOARD,
+                ObjectiveCriteria.DUMMY,
+                Component.literal("YTLS Milk Rain"),
+                ObjectiveCriteria.RenderType.INTEGER,
+                false,
+                null
+            );
+        }
+        int value = active ? 1 : 0;
+        for (ServerPlayer player : level.players()) {
+            scoreboard.getOrCreatePlayerScore(ScoreHolder.forNameOnly(player.getScoreboardName()), objective).set(value);
+        }
+    }
+
     private record ResourceKeyLike(String key) {
     }
 
@@ -85,5 +127,6 @@ public final class MilkRainManager {
         private long until = 0L;
         private long nextRandomCheck = 0L;
         private boolean active = false;
+        private boolean forcedWeather = false;
     }
 }

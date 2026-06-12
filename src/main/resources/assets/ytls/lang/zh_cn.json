@@ -1,5 +1,6 @@
 {
   "itemGroup.ytls": "YTLS",
+  "itemGroup.ytls.main": "YTLS - 更多的奶",
   "key.categories.ytls": "YTLS",
   "key.ytls.use_milk_ability": "使用奶能力",
   "key.ytls.collect_self_milk": "收集自身奶（按住Shift）",
@@ -32,5 +33,11 @@
   "milk_type.ytls.spider_milk": "蜘蛛奶",
   "milk_type.ytls.dragon_milk": "末影龙奶",
   "milk_type.ytls.wither_milk": "凋零奶",
-  "milk_type.ytls.player_milk": "玩家奶"
+  "milk_type.ytls.player_milk": "玩家奶",
+
+  "subtitles.ytls.entity.homelander.ambient": "祖国人说话",
+  "subtitles.ytls.entity.homelander.hurt": "祖国人受伤",
+  "subtitles.ytls.entity.homelander.death": "祖国人死亡",
+  "subtitles.ytls.entity.homelander.heat_vision": "祖国人发射热视线",
+  "subtitles.ytls.entity.homelander.tame": "祖国人被驯服"
 }

@@ -59,12 +59,13 @@ public class MilkBucketItem extends BucketItem {
             serverPlayer.awardStat(Stats.ITEM_USED.get(this));
         }
 
+        if (milkType.needsActiveAbility()) {
+            MilkAbilityManager.grantAbility(entity, milkType);
+        }
+
         if (!level.isClientSide) {
             MilkType.playInstantEffect(level, entity, milkType);
             milkType.applyStandardEffect(entity, milkType.drinkDurationTicks());
-            if (milkType.needsActiveAbility()) {
-                MilkAbilityManager.grantAbility(entity, milkType, 20 * 300);
-            }
             if (milkType == MilkType.PLAYER && entity instanceof Player player) {
                 PlayerLactationManager.addLactation(player, 200);
             }

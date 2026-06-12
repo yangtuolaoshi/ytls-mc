@@ -16,7 +16,6 @@ public final class ModCommands {
 
     public static void register(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("milkrain")
-            .requires(source -> source.hasPermission(2))
             .then(Commands.argument("milkType", StringArgumentType.word())
                 .then(Commands.argument("seconds", IntegerArgumentType.integer(5, 600))
                     .executes(context -> {

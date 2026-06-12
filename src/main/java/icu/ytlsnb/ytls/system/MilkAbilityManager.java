@@ -6,6 +6,8 @@ import net.minecraft.world.entity.player.Player;
 
 public final class MilkAbilityManager {
 
+    public static final int ACTIVE_ABILITY_DURATION_TICKS = 20 * 10;
+
     private static final String TAG_DRAGON_UNTIL = "ytls_dragon_ability_until";
     private static final String TAG_WITHER_UNTIL = "ytls_wither_ability_until";
     private static final String TAG_DRAGON_CD = "ytls_dragon_ability_cd";
@@ -26,6 +28,10 @@ public final class MilkAbilityManager {
         }
     }
 
+    public static void grantAbility(LivingEntity livingEntity, MilkType type) {
+        grantAbility(livingEntity, type, ACTIVE_ABILITY_DURATION_TICKS);
+    }
+
     public static boolean canUse(Player player, MilkType type) {
         long now = player.level().getGameTime();
         if (type == MilkType.DRAGON) {
@@ -37,6 +43,16 @@ public final class MilkAbilityManager {
                 && player.getPersistentData().getLong(TAG_WITHER_CD) <= now;
         }
         return false;
+    }
+
+    public static int getRemainingTicks(Player player, MilkType type) {
+        long now = player.level().getGameTime();
+        long until = switch (type) {
+            case DRAGON -> player.getPersistentData().getLong(TAG_DRAGON_UNTIL);
+            case WITHER -> player.getPersistentData().getLong(TAG_WITHER_UNTIL);
+            default -> 0L;
+        };
+        return Math.max(0, (int) (until - now));
     }
 
     public static void consumeCooldown(Player player, MilkType type, int ticks) {

@@ -9,6 +9,7 @@ import icu.ytlsnb.ytls.system.MilkRainManager;
 import icu.ytlsnb.ytls.system.MilkWorldSystems;
 import icu.ytlsnb.ytls.system.PlayerLactationManager;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -23,9 +24,12 @@ import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.slf4j.Logger;
+import com.mojang.logging.LogUtils;
 
 @Mod.EventBusSubscriber(modid = icu.ytlsnb.ytls.ModConstants.MOD_ID)
 public final class ModEvents {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private ModEvents() {
     }
@@ -112,12 +116,15 @@ public final class ModEvents {
             return;
         }
         Player player = event.player;
-        if (!player.level().isClientSide) {
-            if (player.tickCount % 100 == 0) {
-                PlayerLactationManager.addLactation(player, 10);
+        if (player.tickCount % 100 == 0) {
+            PlayerLactationManager.addLactation(player, 1);
+        }
+        if (!player.level().isClientSide && player instanceof ServerPlayer serverPlayer) {
+            if (player.tickCount % 200 == 0) {
+                LOGGER.info("[YTLS] player={} lactation={}ml", serverPlayer.getGameProfile().getName(), PlayerLactationManager.getLactation(player));
             }
             if (PlayerLactationManager.getLactation(player) >= PlayerLactationManager.MAX_LACTATION && player.tickCount % 8 == 0) {
-                ((ServerLevel) player.level()).sendParticles(net.minecraft.core.particles.ParticleTypes.SPLASH, player.getX(), player.getY(0.5D), player.getZ(), 6, 0.3D, 0.8D, 0.3D, 0.02D);
+                MilkWorldSystems.spawnMilkOverflowParticles((ServerLevel) player.level(), player);
             }
         }
     }

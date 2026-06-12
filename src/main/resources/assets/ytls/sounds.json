@@ -1,0 +1,35 @@
+{
+  "entity.homelander.ambient": {
+    "subtitle": "subtitles.ytls.entity.homelander.ambient",
+    "sounds": [
+      "ytls:homelander/ambient_1",
+      "ytls:homelander/ambient_2",
+      "ytls:homelander/ambient_3"
+    ]
+  },
+  "entity.homelander.hurt": {
+    "subtitle": "subtitles.ytls.entity.homelander.hurt",
+    "sounds": [
+      "ytls:homelander/hurt_1",
+      "ytls:homelander/hurt_2"
+    ]
+  },
+  "entity.homelander.death": {
+    "subtitle": "subtitles.ytls.entity.homelander.death",
+    "sounds": [
+      "ytls:homelander/death"
+    ]
+  },
+  "entity.homelander.heat_vision": {
+    "subtitle": "subtitles.ytls.entity.homelander.heat_vision",
+    "sounds": [
+      "ytls:homelander/heat_vision"
+    ]
+  },
+  "entity.homelander.tame": {
+    "subtitle": "subtitles.ytls.entity.homelander.tame",
+    "sounds": [
+      "ytls:homelander/tame"
+    ]
+  }
+}

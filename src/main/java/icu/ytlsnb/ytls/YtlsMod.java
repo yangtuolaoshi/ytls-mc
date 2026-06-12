@@ -5,10 +5,13 @@ import icu.ytlsnb.ytls.event.ModEvents;
 import icu.ytlsnb.ytls.registry.ModBlockEntities;
 import icu.ytlsnb.ytls.registry.ModBlocks;
 import icu.ytlsnb.ytls.registry.ModCreativeTabHandler;
+import icu.ytlsnb.ytls.registry.ModCreativeTabs;
 import icu.ytlsnb.ytls.registry.ModEntityTypes;
 import icu.ytlsnb.ytls.registry.ModFluids;
 import icu.ytlsnb.ytls.registry.ModItems;
 import icu.ytlsnb.ytls.registry.ModMenuTypes;
+import icu.ytlsnb.ytls.registry.ModParticles;
+import icu.ytlsnb.ytls.registry.ModSounds;
 import icu.ytlsnb.ytls.registry.ModSpawnEggs;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -31,6 +34,9 @@ public final class YtlsMod {
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
+        ModParticles.PARTICLES.register(modEventBus);
+        ModSounds.SOUND_EVENTS.register(modEventBus);
+        ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         modEventBus.addListener(ModCreativeTabHandler::onBuildCreativeTabs);
         modEventBus.addListener(ModEvents::onAttributes);
 

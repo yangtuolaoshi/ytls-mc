@@ -1,6 +1,9 @@
 package icu.ytlsnb.ytls.fluid;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.fluids.FluidType;
@@ -39,8 +42,15 @@ public class MilkFluidType extends FluidType {
 
             @Override
             public int getTintColor() {
-                // 轻微偏乳白，避免与纯水完全相同
-                return 0xFFEFE8D8;
+                return 0xFFF5F2E8;
+            }
+
+            @Override
+            public int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos) {
+                if (state.getType() instanceof MilkFluid milkFluid) {
+                    return milkFluid.getMilkType().fluidTintColor();
+                }
+                return getTintColor();
             }
         });
     }

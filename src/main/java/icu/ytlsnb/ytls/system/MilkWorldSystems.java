@@ -5,10 +5,13 @@ import icu.ytlsnb.ytls.milk.MilkType;
 import icu.ytlsnb.ytls.registry.ModEntityTypes;
 import icu.ytlsnb.ytls.registry.ModFluids;
 import icu.ytlsnb.ytls.registry.ModItems;
+import icu.ytlsnb.ytls.registry.ModParticles;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.AgeableMob;
@@ -25,12 +28,17 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 import java.util.Set;
 
 public final class MilkWorldSystems {
+    private static final DustParticleOptions MILK_DROP_PARTICLE = new DustParticleOptions(new Vector3f(0.97F, 0.97F, 0.97F), 0.85F);
+    private static final int DRAGON_ABILITY_COOLDOWN_TICKS = 20 * 3;
+    private static final int WITHER_ABILITY_COOLDOWN_TICKS = 10;
 
     private MilkWorldSystems() {
     }
@@ -76,7 +84,7 @@ public final class MilkWorldSystems {
                 }
                 type.applyStandardEffect(entity, Math.max(type.fluidEffectDurationTicks(), 60));
                 if (type.needsActiveAbility()) {
-                    MilkAbilityManager.grantAbility(entity, type, 20 * 120);
+                    MilkAbilityManager.grantAbility(entity, type);
                 }
             }
         }
@@ -108,6 +116,9 @@ public final class MilkWorldSystems {
     }
 
     public static void applyMilkRainEffects(ServerLevel level, Set<MilkType> types) {
+        if (level.getGameTime() % 2L == 0L) {
+            spawnMilkRainVisuals(level);
+        }
         for (Player player : level.players()) {
             if (!level.canSeeSky(player.blockPosition())) {
                 continue;
@@ -126,13 +137,13 @@ public final class MilkWorldSystems {
                 } else {
                     type.applyStandardEffect(player, Math.max(80, type.drinkDurationTicks()));
                     if (type.needsActiveAbility()) {
-                        MilkAbilityManager.grantAbility(player, type, 20 * 180);
+                        MilkAbilityManager.grantAbility(player, type);
                     }
                 }
             }
         }
 
-        if (level.getGameTime() % 40L == 0L) {
+        if (level.getGameTime() % 80L == 0L) {
             for (Player player : level.players()) {
                 spawnHomelanderNear(level, player.blockPosition(), 1 + level.random.nextInt(2));
             }
@@ -202,14 +213,16 @@ public final class MilkWorldSystems {
             net.minecraft.world.entity.projectile.DragonFireball fireball = new net.minecraft.world.entity.projectile.DragonFireball(player.level(), player, look.x, look.y, look.z);
             fireball.moveTo(player.getX(), player.getEyeY(), player.getZ());
             player.level().addFreshEntity(fireball);
-            MilkAbilityManager.consumeCooldown(player, MilkType.DRAGON, 60);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENDER_DRAGON_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F);
+            MilkAbilityManager.consumeCooldown(player, MilkType.DRAGON, DRAGON_ABILITY_COOLDOWN_TICKS);
             return true;
         }
         if (MilkAbilityManager.canUse(player, MilkType.WITHER)) {
             net.minecraft.world.entity.projectile.WitherSkull skull = new net.minecraft.world.entity.projectile.WitherSkull(player.level(), player, look.x, look.y, look.z);
             skull.moveTo(player.getX(), player.getEyeY(), player.getZ());
             player.level().addFreshEntity(skull);
-            MilkAbilityManager.consumeCooldown(player, MilkType.WITHER, 50);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F);
+            MilkAbilityManager.consumeCooldown(player, MilkType.WITHER, WITHER_ABILITY_COOLDOWN_TICKS);
             return true;
         }
         return false;
@@ -226,5 +239,48 @@ public final class MilkWorldSystems {
         player.getMainHandItem().shrink(1);
         MilkType.PLAYER.resolveBucketItem().ifPresent(item -> player.addItem(new ItemStack(item)));
         return true;
+    }
+
+    public static void spawnMilkOverflowParticles(ServerLevel level, Player player) {
+        for (int i = 0; i < 8; i++) {
+            double x = player.getX() + (level.random.nextDouble() - 0.5D) * 0.7D;
+            double y = player.getY() + 1.2D + level.random.nextDouble() * 0.8D;
+            double z = player.getZ() + (level.random.nextDouble() - 0.5D) * 0.7D;
+            level.sendParticles(MILK_DROP_PARTICLE, x, y, z, 1, 0, -0.08D, 0, 0.01D);
+        }
+    }
+
+    public static void spawnMilkRainVisuals(ServerLevel level) {
+        for (Player player : level.players()) {
+            BlockPos center = player.blockPosition();
+            for (int i = 0; i < 42; i++) {
+                int x = center.getX() + level.random.nextInt(21) - 10;
+                int z = center.getZ() + level.random.nextInt(21) - 10;
+                int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+                if (groundY < center.getY() - 12 || groundY > center.getY() + 16) {
+                    continue;
+                }
+                double px = x + level.random.nextDouble();
+                double pz = z + level.random.nextDouble();
+                double py = Math.max(center.getY() + 3.0D, groundY + 7.0D + level.random.nextDouble() * 7.0D);
+                double windX = (level.random.nextDouble() - 0.5D) * 0.025D;
+                double windZ = (level.random.nextDouble() - 0.5D) * 0.025D;
+                level.sendParticles(ModParticles.MILK_RAIN_STREAK.get(), px, py, pz, 0, windX, -0.34D, windZ, 1.0D);
+
+                if (level.random.nextInt(3) == 0 && level.canSeeSky(new BlockPos(x, groundY, z))) {
+                    level.sendParticles(
+                        ModParticles.MILK_RAIN_SPLASH.get(),
+                        px,
+                        groundY + 0.08D,
+                        pz,
+                        2,
+                        0.035D,
+                        0.06D,
+                        0.035D,
+                        0.02D
+                    );
+                }
+            }
+        }
     }
 }

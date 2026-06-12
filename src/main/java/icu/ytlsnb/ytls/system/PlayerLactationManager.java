@@ -15,7 +15,8 @@ public final class PlayerLactationManager {
     }
 
     public static void setLactation(Player player, int value) {
-        player.getPersistentData().putInt(TAG_LACTATION, Math.max(0, Math.min(MAX_LACTATION, value)));
+        int clamped = Math.max(0, Math.min(MAX_LACTATION, value));
+        player.getPersistentData().putInt(TAG_LACTATION, clamped);
     }
 
     public static void addLactation(Player player, int delta) {

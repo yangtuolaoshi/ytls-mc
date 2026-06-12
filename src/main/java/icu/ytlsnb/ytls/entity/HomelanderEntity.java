@@ -1,6 +1,7 @@
 package icu.ytlsnb.ytls.entity;
 
 import icu.ytlsnb.ytls.system.MilkWorldSystems;
+import icu.ytlsnb.ytls.registry.ModSounds;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -8,7 +9,6 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -82,7 +82,7 @@ public class HomelanderEntity extends TamableAnimal {
                 heatVisionCooldown = 50;
             }
             if (random.nextInt(240) == 0) {
-                level().playSound(null, blockPosition(), SoundEvents.VILLAGER_AMBIENT, getSoundSource(), 0.8F, 0.8F + random.nextFloat() * 0.4F);
+                level().playSound(null, blockPosition(), ModSounds.HOMELANDER_AMBIENT.get(), getSoundSource(), 0.8F, 0.8F + random.nextFloat() * 0.4F);
             }
         }
     }
@@ -90,6 +90,7 @@ public class HomelanderEntity extends TamableAnimal {
     private void performHeatVision(LivingEntity target) {
         target.hurt(damageSources().mobAttack(this), 16.0F);
         target.setSecondsOnFire(4);
+        level().playSound(null, blockPosition(), ModSounds.HOMELANDER_HEAT_VISION.get(), getSoundSource(), 1.0F, 0.9F + random.nextFloat() * 0.2F);
         if (level() instanceof ServerLevel serverLevel) {
             for (int i = 0; i < 12; i++) {
                 double t = i / 12.0D;
@@ -111,6 +112,7 @@ public class HomelanderEntity extends TamableAnimal {
                 if (MilkWorldSystems.isPlayerMilkBucket(stack) && !isTame()) {
                     tame(player);
                     setOrderedToSit(false);
+                    level().playSound(null, blockPosition(), ModSounds.HOMELANDER_TAME.get(), getSoundSource(), 1.0F, 1.0F);
                     level().broadcastEntityEvent(this, (byte) 7);
                 }
                 if (!player.getAbilities().instabuild) {
@@ -153,16 +155,16 @@ public class HomelanderEntity extends TamableAnimal {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.VILLAGER_AMBIENT;
+        return ModSounds.HOMELANDER_AMBIENT.get();
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.PLAYER_HURT;
+        return ModSounds.HOMELANDER_HURT.get();
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.PLAYER_DEATH;
+        return ModSounds.HOMELANDER_DEATH.get();
     }
 }
