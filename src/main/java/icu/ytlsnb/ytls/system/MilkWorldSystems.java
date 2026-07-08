@@ -18,6 +18,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Creeper;
@@ -63,23 +64,32 @@ public final class MilkWorldSystems {
     }
 
     public static MilkType findMilkForEntity(Entity entity) {
-        if (entity instanceof Chicken) return MilkType.CHICKEN;
-        if (entity instanceof Creeper) return MilkType.CREEPER;
-        if (entity instanceof EnderMan) return MilkType.ENDERMAN;
-        if (entity instanceof Villager) return MilkType.VILLAGER;
-        if (entity instanceof Rabbit) return MilkType.RABBIT;
-        if (entity instanceof Shulker) return MilkType.SHULKER;
-        if (entity instanceof Spider) return MilkType.SPIDER;
-        if (entity instanceof EnderDragon) return MilkType.DRAGON;
-        if (entity instanceof WitherBoss) return MilkType.WITHER;
+        Entity milkTarget = resolveMilkTarget(entity);
+        if (milkTarget instanceof Chicken) return MilkType.CHICKEN;
+        if (milkTarget instanceof Creeper) return MilkType.CREEPER;
+        if (milkTarget instanceof EnderMan) return MilkType.ENDERMAN;
+        if (milkTarget instanceof Villager) return MilkType.VILLAGER;
+        if (milkTarget instanceof Rabbit) return MilkType.RABBIT;
+        if (milkTarget instanceof Shulker) return MilkType.SHULKER;
+        if (milkTarget instanceof Spider) return MilkType.SPIDER;
+        if (milkTarget instanceof EnderDragon) return MilkType.DRAGON;
+        if (milkTarget instanceof WitherBoss) return MilkType.WITHER;
         return null;
     }
 
+    public static Entity resolveMilkTarget(Entity entity) {
+        if (entity instanceof EnderDragonPart part && part.parentMob != null) {
+            return part.parentMob;
+        }
+        return entity;
+    }
+
     public static boolean canProduceMilk(Entity entity) {
-        if (entity instanceof AgeableMob ageableMob) {
+        Entity milkTarget = resolveMilkTarget(entity);
+        if (milkTarget instanceof AgeableMob ageableMob) {
             return !ageableMob.isBaby();
         }
-        return true;
+        return milkTarget instanceof LivingEntity;
     }
 
     public static void applyFluidEffects(ServerLevel level, LivingEntity entity, Fluid fluid) {

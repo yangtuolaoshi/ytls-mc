@@ -11,6 +11,7 @@ import icu.ytlsnb.ytls.system.MilkWorldSystems;
 import icu.ytlsnb.ytls.system.PlayerLactationManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -44,24 +45,32 @@ public final class ModEvents {
 
     @SubscribeEvent
     public static void onEntityMilk(PlayerInteractEvent.EntityInteract event) {
-        Player player = event.getEntity();
-        ItemStack item = event.getItemStack();
-        Entity target = event.getTarget();
+        if (tryMilkEntity(event.getEntity(), event.getItemStack(), event.getHand(), event.getTarget())) {
+            event.setCanceled(true);
+        }
+    }
 
+    @SubscribeEvent
+    public static void onEntityMilkSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
+        if (tryMilkEntity(event.getEntity(), event.getItemStack(), event.getHand(), event.getTarget())) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean tryMilkEntity(Player player, ItemStack item, InteractionHand hand, Entity target) {
         if (!item.is(Items.BUCKET)) {
-            return;
+            return false;
         }
         MilkType type = MilkWorldSystems.findMilkForEntity(target);
         if (type == null || !MilkWorldSystems.canProduceMilk(target)) {
-            return;
+            return false;
         }
-
         if (!player.level().isClientSide) {
             item.shrink(1);
             type.resolveBucketItem().ifPresent(bucket -> player.addItem(new ItemStack(bucket)));
-            player.swing(event.getHand(), true);
+            player.swing(hand, true);
         }
-        event.setCanceled(true);
+        return true;
     }
 
     @SubscribeEvent
