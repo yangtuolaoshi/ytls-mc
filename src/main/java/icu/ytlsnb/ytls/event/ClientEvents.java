@@ -12,6 +12,7 @@ import icu.ytlsnb.ytls.registry.ModEntityTypes;
 import icu.ytlsnb.ytls.registry.ModMenuTypes;
 import icu.ytlsnb.ytls.registry.ModParticles;
 import icu.ytlsnb.ytls.system.MilkAbilityManager;
+import icu.ytlsnb.ytls.system.MilkWorldSystems;
 import icu.ytlsnb.ytls.system.PlayerLactationManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -130,6 +131,7 @@ class ClientForgeEvents {
         if (minecraft.level == null || minecraft.player == null || minecraft.isPaused()) {
             return;
         }
+        MilkWorldSystems.syncActiveAbilityFromFluid(minecraft.player);
         MilkRainClientState.tick();
         if (!MilkRainClientState.isActive()) {
             return;

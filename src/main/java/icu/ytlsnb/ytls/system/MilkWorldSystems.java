@@ -107,12 +107,27 @@ public final class MilkWorldSystems {
     }
 
     public static boolean isMilkFluid(Fluid fluid) {
+        return findMilkTypeForFluid(fluid) != null;
+    }
+
+    public static MilkType findMilkTypeForFluid(Fluid fluid) {
         for (MilkType type : MilkType.values()) {
             if (ModFluids.SOURCE_FLUIDS.get(type).get() == fluid || ModFluids.FLOWING_FLUIDS.get(type).get() == fluid) {
-                return true;
+                return type;
             }
         }
-        return false;
+        return null;
+    }
+
+    public static void syncActiveAbilityFromFluid(Player player) {
+        if (player.tickCount % 10 != 0) {
+            return;
+        }
+        Fluid fluid = player.level().getFluidState(player.blockPosition()).getType();
+        MilkType type = findMilkTypeForFluid(fluid);
+        if (type != null && type.needsActiveAbility()) {
+            MilkAbilityManager.grantAbility(player, type);
+        }
     }
 
     public static void applyMilkRainEffects(ServerLevel level, Set<MilkType> types) {
