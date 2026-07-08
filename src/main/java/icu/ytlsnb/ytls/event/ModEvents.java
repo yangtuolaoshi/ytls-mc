@@ -132,10 +132,14 @@ public final class ModEvents {
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        Player player = event.player;
+        if (event.phase == TickEvent.Phase.START) {
+            MilkWorldSystems.applySpiderClimbDuringTravel(player);
+            return;
+        }
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
-        Player player = event.player;
         if (player.tickCount % 100 == 0) {
             PlayerLactationManager.addLactation(player, 1);
         }

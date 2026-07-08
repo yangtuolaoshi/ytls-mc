@@ -7,11 +7,14 @@ import icu.ytlsnb.ytls.registry.ModFluids;
 import icu.ytlsnb.ytls.registry.ModItems;
 import icu.ytlsnb.ytls.registry.ModParticles;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.AgeableMob;
@@ -28,10 +31,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.joml.Vector3f;
 import java.util.Set;
 
@@ -39,6 +44,7 @@ public final class MilkWorldSystems {
     private static final DustParticleOptions MILK_DROP_PARTICLE = new DustParticleOptions(new Vector3f(0.97F, 0.97F, 0.97F), 0.85F);
     private static final int DRAGON_ABILITY_COOLDOWN_TICKS = 20 * 3;
     private static final int WITHER_ABILITY_COOLDOWN_TICKS = 10;
+    private static final double SPIDER_CLIMB_SPEED = 0.2D;
 
     private MilkWorldSystems() {
     }
@@ -239,6 +245,96 @@ public final class MilkWorldSystems {
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F);
             MilkAbilityManager.consumeCooldown(player, MilkType.WITHER, WITHER_ABILITY_COOLDOWN_TICKS);
             return true;
+        }
+        return false;
+    }
+
+    public static boolean tryLayEgg(ServerPlayer player) {
+        if (!MilkAbilityManager.hasAbility(player, MilkType.CHICKEN)) {
+            return false;
+        }
+        Level level = player.level();
+        ItemEntity egg = new ItemEntity(level, player.getX(), player.getY() + 0.8D, player.getZ(), new ItemStack(Items.EGG));
+        egg.setDefaultPickUpDelay();
+        float pitch = player.getXRot();
+        float yaw = player.getYRot();
+        float sinYaw = Mth.sin(-yaw * ((float) Math.PI / 180F) - (float) Math.PI);
+        float cosYaw = Mth.cos(-yaw * ((float) Math.PI / 180F) - (float) Math.PI);
+        float sinPitch = -Mth.sin(-pitch * ((float) Math.PI / 180F));
+        egg.setDeltaMovement(sinYaw * 0.08D, sinPitch * 0.04D + 0.18D, cosYaw * 0.08D);
+        level.addFreshEntity(egg);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CHICKEN_EGG, player.getSoundSource(), 1.0F, 1.0F);
+        return true;
+    }
+
+    public static void applySpiderClimbDuringTravel(Player player) {
+        if (!MilkAbilityManager.hasAbility(player, MilkType.SPIDER)) {
+            return;
+        }
+        if (player.getAbilities().flying || player.isPassenger()) {
+            return;
+        }
+        if (player.xxa == 0.0F && player.zza == 0.0F) {
+            return;
+        }
+        if (!isTouchingClimbableWall(player)) {
+            return;
+        }
+        Vec3 motion = player.getDeltaMovement();
+        player.setDeltaMovement(motion.x, SPIDER_CLIMB_SPEED, motion.z);
+        player.fallDistance = 0.0F;
+        player.setOnGround(false);
+    }
+
+    private static boolean isTouchingClimbableWall(Player player) {
+        if (player.horizontalCollision) {
+            return true;
+        }
+        Level level = player.level();
+        AABB box = player.getBoundingBox();
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            BlockPos base = player.blockPosition();
+            for (int y = 0; y < 2; y++) {
+                BlockPos wallPos = base.relative(direction).above(y);
+                BlockState state = level.getBlockState(wallPos);
+                if (state.isAir()) {
+                    continue;
+                }
+                VoxelShape shape = state.getCollisionShape(level, wallPos);
+                if (shape.isEmpty()) {
+                    continue;
+                }
+                for (AABB localBox : shape.toAabbs()) {
+                    AABB worldBox = localBox.move(wallPos.getX(), wallPos.getY(), wallPos.getZ());
+                    if (box.inflate(0.05D, 0.0D, 0.05D).intersects(worldBox) && worldBox.maxY > box.minY + 0.1D) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return isWallInMovementDirection(player);
+    }
+
+    private static boolean isWallInMovementDirection(Player player) {
+        float forward = player.zza;
+        float strafe = player.xxa;
+        if (forward == 0.0F && strafe == 0.0F) {
+            return false;
+        }
+        float yawRadians = player.getYRot() * ((float) Math.PI / 180F);
+        double moveX = strafe * Math.cos(yawRadians) - forward * Math.sin(yawRadians);
+        double moveZ = strafe * Math.sin(yawRadians) + forward * Math.cos(yawRadians);
+        if (Math.abs(moveX) < 1.0E-4D && Math.abs(moveZ) < 1.0E-4D) {
+            return false;
+        }
+        Direction direction = Direction.getNearest(moveX, 0.0D, moveZ);
+        BlockPos base = player.blockPosition();
+        Level level = player.level();
+        for (int y = 0; y < 2; y++) {
+            BlockPos wallPos = base.relative(direction).above(y);
+            if (!level.getBlockState(wallPos).getCollisionShape(level, wallPos).isEmpty()) {
+                return true;
+            }
         }
         return false;
     }

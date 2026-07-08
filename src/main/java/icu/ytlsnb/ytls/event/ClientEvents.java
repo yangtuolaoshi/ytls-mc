@@ -77,7 +77,9 @@ public final class ClientEvents {
 
         int y = 22;
         y = drawAbilityTime(graphics, minecraft, MilkType.DRAGON, "龙息", y);
-        drawAbilityTime(graphics, minecraft, MilkType.WITHER, "凋零头颅", y);
+        y = drawAbilityTime(graphics, minecraft, MilkType.WITHER, "凋零头颅", y);
+        y = drawAbilityTime(graphics, minecraft, MilkType.CHICKEN, "下蛋", y);
+        drawAbilityTime(graphics, minecraft, MilkType.SPIDER, "爬墙", y);
     };
 
     private static int drawAbilityTime(GuiGraphics graphics, Minecraft minecraft, MilkType type, String label, int y) {
@@ -105,6 +107,9 @@ public final class ClientEvents {
 
 @Mod.EventBusSubscriber(modid = icu.ytlsnb.ytls.ModConstants.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 class ClientForgeEvents {
+
+    private static boolean wasShiftDown;
+
     @SubscribeEvent
     public static void onKeyInput(InputEvent.Key event) {
         Minecraft minecraft = Minecraft.getInstance();
@@ -132,6 +137,13 @@ class ClientForgeEvents {
             return;
         }
         MilkWorldSystems.syncActiveAbilityFromFluid(minecraft.player);
+        boolean shiftDown = minecraft.player.isShiftKeyDown();
+        if (shiftDown && !wasShiftDown && MilkAbilityManager.hasAbility(minecraft.player, MilkType.CHICKEN)) {
+            if (minecraft.getConnection() != null) {
+                minecraft.getConnection().sendCommand("ytls_lay_egg");
+            }
+        }
+        wasShiftDown = shiftDown;
         MilkRainClientState.tick();
         if (!MilkRainClientState.isActive()) {
             return;

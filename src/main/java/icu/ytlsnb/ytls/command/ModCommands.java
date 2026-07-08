@@ -42,6 +42,13 @@ public final class ModCommands {
                 }
                 return MilkWorldSystems.tryCollectSelfMilk(context.getSource().getPlayer()) ? 1 : 0;
             }));
+        event.getDispatcher().register(Commands.literal("ytls_lay_egg")
+            .executes(context -> {
+                if (context.getSource().getPlayer() == null) {
+                    return 0;
+                }
+                return MilkWorldSystems.tryLayEgg(context.getSource().getPlayer()) ? 1 : 0;
+            }));
     }
 
     private static MilkType findByName(String value) {

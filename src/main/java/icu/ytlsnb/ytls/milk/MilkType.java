@@ -93,7 +93,7 @@ public enum MilkType {
     }
 
     public boolean needsActiveAbility() {
-        return this == DRAGON || this == WITHER;
+        return this == DRAGON || this == WITHER || this == CHICKEN || this == SPIDER;
     }
 
     public static void playInstantEffect(Level level, LivingEntity entity, MilkType type) {
