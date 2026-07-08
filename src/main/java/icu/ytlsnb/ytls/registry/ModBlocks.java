@@ -25,6 +25,7 @@ public final class ModBlocks {
             .strength(4.0F, 6.0F)
             .mapColor(MapColor.COLOR_CYAN)
             .requiresCorrectToolForDrops()
+            .noOcclusion()
     ));
 
     private ModBlocks() {

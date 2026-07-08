@@ -1,6 +1,7 @@
 package icu.ytlsnb.ytls.event;
 
 import icu.ytlsnb.ytls.entity.HomelanderEntity;
+import icu.ytlsnb.ytls.item.CrowbarItem;
 import icu.ytlsnb.ytls.milk.MilkType;
 import icu.ytlsnb.ytls.registry.ModEntityTypes;
 import icu.ytlsnb.ytls.registry.ModFluids;
@@ -10,6 +11,7 @@ import icu.ytlsnb.ytls.system.MilkWorldSystems;
 import icu.ytlsnb.ytls.system.PlayerLactationManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -21,6 +23,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -96,6 +99,23 @@ public final class ModEvents {
         if (stack.is(ModItems.GALACTAGOGUE.get())) {
             PlayerLactationManager.addLactation(player, 500);
         }
+    }
+
+    @SubscribeEvent
+    public static void onCrowbarHomelanderDamage(LivingHurtEvent event) {
+        if (!(event.getEntity() instanceof HomelanderEntity)) {
+            return;
+        }
+        if (!(event.getSource().getEntity() instanceof Player player)) {
+            return;
+        }
+        if (!event.getSource().is(DamageTypes.PLAYER_ATTACK)) {
+            return;
+        }
+        if (!player.getMainHandItem().is(ModItems.CROWBAR.get())) {
+            return;
+        }
+        event.setAmount(event.getAmount() + CrowbarItem.HOMELANDER_BONUS_DAMAGE);
     }
 
     @SubscribeEvent

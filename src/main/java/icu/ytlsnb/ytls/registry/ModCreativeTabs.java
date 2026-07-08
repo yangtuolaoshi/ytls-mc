@@ -19,6 +19,7 @@ public final class ModCreativeTabs {
             .displayItems((parameters, output) -> {
                 output.accept(ModItems.MILK_ALTAR_ITEM.get());
                 output.accept(ModItems.GALACTAGOGUE.get());
+                output.accept(ModItems.CROWBAR.get());
                 ModItems.MILK_BUCKETS.values().forEach(item -> output.accept(item.get()));
                 output.accept(ModSpawnEggs.HOMELANDER_SPAWN_EGG.get());
             })

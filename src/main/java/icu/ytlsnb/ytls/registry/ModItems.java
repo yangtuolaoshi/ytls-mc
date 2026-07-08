@@ -1,6 +1,7 @@
 package icu.ytlsnb.ytls.registry;
 
 import icu.ytlsnb.ytls.ModConstants;
+import icu.ytlsnb.ytls.item.CrowbarItem;
 import icu.ytlsnb.ytls.item.MilkBucketItem;
 import icu.ytlsnb.ytls.milk.MilkType;
 import net.minecraft.world.food.FoodProperties;
@@ -29,6 +30,9 @@ public final class ModItems {
 
     public static final RegistryObject<Item> MILK_ALTAR_ITEM = ITEMS.register("milk_altar",
         () -> new BlockItem(ModBlocks.MILK_ALTAR.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> CROWBAR = ITEMS.register("crowbar",
+        () -> new CrowbarItem(new Item.Properties()));
 
     private ModItems() {
     }

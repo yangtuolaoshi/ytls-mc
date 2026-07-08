@@ -1,6 +1,165 @@
 {
-  "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "ytls:block/milk_altar"
+    "body": "ytls:block/milk_altar_body",
+    "ring": "ytls:block/milk_altar_ring",
+    "particle": "ytls:block/milk_altar_body"
+  },
+  "elements": [
+    {
+      "from": [2, 0, 2],
+      "to": [14, 10, 14],
+      "rotation": {"angle": 0, "axis": "z", "origin": [9, 0, 9]},
+      "faces": {
+        "north": {"uv": [0, 0, 3, 3], "texture": "#body"},
+        "east": {"uv": [0, 0, 3, 3], "texture": "#body"},
+        "south": {"uv": [0, 0, 3, 3], "texture": "#body"},
+        "west": {"uv": [0, 0, 3, 3], "texture": "#body"},
+        "up": {"uv": [3, 9, 0, 6], "texture": "#body"},
+        "down": {"uv": [9, 0, 6, 3], "texture": "#body"}
+      }
+    },
+    {
+      "name": "octagon",
+      "from": [6.34315, 10, 4],
+      "to": [9.65685, 10.5, 5],
+      "rotation": {"angle": 45, "axis": "y", "origin": [8, 10.5, 8]},
+      "faces": {
+        "north": {"uv": [4, 7, 7.5, 7.5], "texture": "#ring"},
+        "east": {"uv": [8, 10, 9, 10.5], "texture": "#ring"},
+        "south": {"uv": [8, 0, 11.5, 0.5], "texture": "#ring"},
+        "west": {"uv": [9, 10, 10, 10.5], "texture": "#ring"},
+        "up": {"uv": [3.5, 1, 0, 0], "texture": "#ring"},
+        "down": {"uv": [3.5, 1, 0, 2], "texture": "#ring"}
+      }
+    },
+    {
+      "name": "octagon",
+      "from": [6.34315, 10, 4],
+      "to": [9.65685, 10.5, 5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 10.5, 8]},
+      "faces": {
+        "north": {"uv": [8, 1, 11.5, 1.5], "texture": "#ring"},
+        "east": {"uv": [10, 10, 11, 10.5], "texture": "#ring"},
+        "south": {"uv": [8, 2, 11.5, 2.5], "texture": "#ring"},
+        "west": {"uv": [0, 11, 1, 11.5], "texture": "#ring"},
+        "up": {"uv": [3.5, 3, 0, 2], "texture": "#ring"},
+        "down": {"uv": [3.5, 3, 0, 4], "texture": "#ring"}
+      }
+    },
+    {
+      "name": "octagon",
+      "from": [6.34315, 10, 11],
+      "to": [9.65685, 10.5, 12],
+      "rotation": {"angle": 45, "axis": "y", "origin": [8, 10.5, 8]},
+      "faces": {
+        "north": {"uv": [8, 3, 11.5, 3.5], "texture": "#ring"},
+        "east": {"uv": [1, 11, 2, 11.5], "texture": "#ring"},
+        "south": {"uv": [4, 8, 7.5, 8.5], "texture": "#ring"},
+        "west": {"uv": [2, 11, 3, 11.5], "texture": "#ring"},
+        "up": {"uv": [3.5, 5, 0, 4], "texture": "#ring"},
+        "down": {"uv": [7.5, 0, 4, 1], "texture": "#ring"}
+      }
+    },
+    {
+      "name": "octagon",
+      "from": [6.34315, 10, 11],
+      "to": [9.65685, 10.5, 12],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 10.5, 8]},
+      "faces": {
+        "north": {"uv": [8, 4, 11.5, 4.5], "texture": "#ring"},
+        "east": {"uv": [3, 11, 4, 11.5], "texture": "#ring"},
+        "south": {"uv": [8, 5, 11.5, 5.5], "texture": "#ring"},
+        "west": {"uv": [4, 11, 5, 11.5], "texture": "#ring"},
+        "up": {"uv": [7.5, 2, 4, 1], "texture": "#ring"},
+        "down": {"uv": [7.5, 2, 4, 3], "texture": "#ring"}
+      }
+    },
+    {
+      "name": "octagon",
+      "from": [4, 10, 6.34315],
+      "to": [5, 10.5, 9.65685],
+      "rotation": {"angle": 45, "axis": "y", "origin": [8, 10.5, 8]},
+      "faces": {
+        "north": {"uv": [5, 11, 6, 11.5], "texture": "#ring"},
+        "east": {"uv": [8, 6, 11.5, 6.5], "texture": "#ring"},
+        "south": {"uv": [6, 11, 7, 11.5], "texture": "#ring"},
+        "west": {"uv": [8, 7, 11.5, 7.5], "texture": "#ring"},
+        "up": {"uv": [5, 6.5, 4, 3], "texture": "#ring"},
+        "down": {"uv": [1, 5, 0, 8.5], "texture": "#ring"}
+      }
+    },
+    {
+      "name": "octagon",
+      "from": [4, 10, 6.34315],
+      "to": [5, 10.5, 9.65685],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 10.5, 8]},
+      "faces": {
+        "north": {"uv": [7, 11, 8, 11.5], "texture": "#ring"},
+        "east": {"uv": [8, 8, 11.5, 8.5], "texture": "#ring"},
+        "south": {"uv": [8, 11, 9, 11.5], "texture": "#ring"},
+        "west": {"uv": [0, 9, 3.5, 9.5], "texture": "#ring"},
+        "up": {"uv": [2, 8.5, 1, 5], "texture": "#ring"},
+        "down": {"uv": [3, 5, 2, 8.5], "texture": "#ring"}
+      }
+    },
+    {
+      "name": "octagon",
+      "from": [11, 10, 6.34315],
+      "to": [12, 10.5, 9.65685],
+      "rotation": {"angle": 45, "axis": "y", "origin": [8, 10.5, 8]},
+      "faces": {
+        "north": {"uv": [9, 11, 10, 11.5], "texture": "#ring"},
+        "east": {"uv": [4, 9, 7.5, 9.5], "texture": "#ring"},
+        "south": {"uv": [10, 11, 11, 11.5], "texture": "#ring"},
+        "west": {"uv": [8, 9, 11.5, 9.5], "texture": "#ring"},
+        "up": {"uv": [4, 8.5, 3, 5], "texture": "#ring"},
+        "down": {"uv": [6, 3, 5, 6.5], "texture": "#ring"}
+      }
+    },
+    {
+      "name": "octagon",
+      "from": [11, 10, 6.34315],
+      "to": [12, 10.5, 9.65685],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 10.5, 8]},
+      "faces": {
+        "north": {"uv": [11, 10, 12, 10.5], "texture": "#ring"},
+        "east": {"uv": [0, 10, 3.5, 10.5], "texture": "#ring"},
+        "south": {"uv": [11, 11, 12, 11.5], "texture": "#ring"},
+        "west": {"uv": [4, 10, 7.5, 10.5], "texture": "#ring"},
+        "up": {"uv": [7, 6.5, 6, 3], "texture": "#ring"},
+        "down": {"uv": [8, 3, 7, 6.5], "texture": "#ring"}
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [75, 45, 0],
+      "translation": [0, 2.5, 0],
+      "scale": [0.375, 0.375, 0.375]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [75, 45, 0],
+      "translation": [0, 2.5, 0],
+      "scale": [0.375, 0.375, 0.375]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, 45, 0],
+      "scale": [0.4, 0.4, 0.4]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 225, 0],
+      "scale": [0.4, 0.4, 0.4]
+    },
+    "ground": {
+      "translation": [0, 3, 0],
+      "scale": [0.25, 0.25, 0.25]
+    },
+    "gui": {
+      "rotation": [30, 225, 0],
+      "scale": [0.625, 0.625, 0.625]
+    },
+    "fixed": {
+      "scale": [0.5, 0.5, 0.5]
+    }
   }
 }
