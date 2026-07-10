@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "ytls:block/toilet_0",
+    "down": "ytls:block/toilet_0",
+    "up": "ytls:block/toilet_0",
+    "north": "ytls:block/toilet_0",
+    "south": "ytls:block/toilet_0",
+    "east": "ytls:block/toilet_0",
+    "west": "ytls:block/toilet_0"
+  }
+}

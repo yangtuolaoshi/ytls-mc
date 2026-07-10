@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "poop_count=0": { "model": "ytls:block/toilet_0" },
+    "poop_count=1": { "model": "ytls:block/toilet_1" },
+    "poop_count=2": { "model": "ytls:block/toilet_2" },
+    "poop_count=3": { "model": "ytls:block/toilet_3" }
+  }
+}
