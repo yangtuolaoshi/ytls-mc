@@ -11,9 +11,9 @@ public final class PlungerHookEntitySupplier implements RegistrySupplier<EntityT
     @Override
     public EntityType<?> get() {
         return EntityType.Builder.<PlungerHookEntity>of(PlungerHookEntity::new, MobCategory.MISC)
-                .sized(0.5F, 0.5F)
-                .clientTrackingRange(8)
-                .updateInterval(5)
+                .sized(0.4F, 0.4F)
+                .clientTrackingRange(10)
+                .updateInterval(1)
                 .build("plunger_hook");
     }
 }

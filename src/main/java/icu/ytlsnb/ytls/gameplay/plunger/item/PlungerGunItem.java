@@ -33,30 +33,33 @@ public class PlungerGunItem extends Item {
 
         PlungerHookEntity existing = findHook(level, stack);
         if (existing != null && existing.isAlive()) {
-            if (existing.getHookMode() != PlungerHookEntity.HookMode.REELING) {
+            PlungerHookEntity.HookMode mode = existing.getHookMode();
+            if (mode != PlungerHookEntity.HookMode.REELING
+                    && mode != PlungerHookEntity.HookMode.GRAPPLING) {
                 existing.startReelIn();
+                playRetrieveSound(level, player);
+                player.gameEvent(GameEvent.ITEM_INTERACT_FINISH);
             }
-            playRetrieveSound(level, player);
             return InteractionResultHolder.consume(stack);
         }
 
+        // 标签残留但实体已不存在：清掉后允许再次发射
         if (hasHookTag(stack)) {
             clearHook(stack);
-            playRetrieveSound(level, player);
-            return InteractionResultHolder.consume(stack);
         }
 
         PlungerHookEntity hook = new PlungerHookEntity(level, player);
-        hook.shootFromPlayer(player, player.getAbilities().instabuild ? 1.0F : 0.4F);
-        if (level.addFreshEntity(hook)) {
-            setHook(stack, hook.getUUID());
-            player.awardStat(Stats.ITEM_USED.get(this));
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.FISHING_BOBBER_THROW, SoundSource.NEUTRAL, 0.5F, 0.8F);
-            player.gameEvent(GameEvent.ITEM_INTERACT_START);
-            return InteractionResultHolder.consume(stack);
+        hook.shootFromPlayer(player, player.getAbilities().instabuild ? 1.0F : 0.75F);
+        if (!level.addFreshEntity(hook)) {
+            return InteractionResultHolder.fail(stack);
         }
-        return InteractionResultHolder.fail(stack);
+
+        setHook(stack, hook.getUUID());
+        player.awardStat(Stats.ITEM_USED.get(this));
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.FISHING_BOBBER_THROW, SoundSource.NEUTRAL, 0.75F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
+        player.gameEvent(GameEvent.ITEM_INTERACT_START);
+        return InteractionResultHolder.consume(stack);
     }
 
     @Nullable
@@ -78,7 +81,9 @@ public class PlungerGunItem extends Item {
     }
 
     private static void clearHookIfMatch(ItemStack stack, UUID hookId) {
-        if (hasHookTag(stack) && stack.getTag().getUUID(TAG_HOOK).equals(hookId)) {
+        if (stack.getItem() instanceof PlungerGunItem
+                && hasHookTag(stack)
+                && stack.getTag().getUUID(TAG_HOOK).equals(hookId)) {
             clearHook(stack);
         }
     }
@@ -94,11 +99,14 @@ public class PlungerGunItem extends Item {
     private static void clearHook(ItemStack stack) {
         if (stack.hasTag()) {
             stack.getTag().remove(TAG_HOOK);
+            if (stack.getTag().isEmpty()) {
+                stack.setTag(null);
+            }
         }
     }
 
     private static void playRetrieveSound(Level level, Player player) {
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.FISHING_BOBBER_RETRIEVE, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                SoundEvents.FISHING_BOBBER_RETRIEVE, SoundSource.NEUTRAL, 1.0F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
     }
 }
