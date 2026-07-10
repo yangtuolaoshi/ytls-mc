@@ -8,6 +8,7 @@ import icu.ytlsnb.ytls.framework.event.events.BlockPlaceEvent;
 import icu.ytlsnb.ytls.framework.event.events.ChunkLoadEvent;
 import icu.ytlsnb.ytls.framework.event.events.DimensionChangeEvent;
 import icu.ytlsnb.ytls.framework.event.events.EntityDeathEvent;
+import icu.ytlsnb.ytls.framework.event.events.EntityInteractEvent;
 import icu.ytlsnb.ytls.framework.event.events.EntitySpawnEvent;
 import icu.ytlsnb.ytls.framework.event.events.ItemUseEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerDeathEvent;
@@ -16,6 +17,7 @@ import icu.ytlsnb.ytls.framework.event.events.LevelLoadEvent;
 import icu.ytlsnb.ytls.framework.event.events.LevelUnloadEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerLoginEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerLogoutEvent;
+import icu.ytlsnb.ytls.framework.event.events.RightClickBlockEvent;
 import icu.ytlsnb.ytls.framework.util.FrameworkLog;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,6 +33,8 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.slf4j.Logger;
@@ -176,6 +180,62 @@ public final class ForgeEventBridge {
         if (gameEvent.isCancelled()) {
             event.setCanceled(true);
             event.setCancellationResult(net.minecraft.world.InteractionResult.FAIL);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        Level level = event.getLevel();
+        // 服务端拦截开箱/睡觉；客户端也禁止方块 use，避免本地打开 GUI
+        RightClickBlockEvent gameEvent = new RightClickBlockEvent(
+                event.getEntity(),
+                level,
+                event.getItemStack(),
+                event.getHand(),
+                event.getPos(),
+                level.getBlockState(event.getPos()),
+                event.getHitVec());
+        post(GameEventType.RIGHT_CLICK_BLOCK, gameEvent);
+        if (gameEvent.denyBlockUse()) {
+            event.setUseBlock(Event.Result.DENY);
+        }
+        if (gameEvent.forceItemUse()) {
+            event.setUseItem(Event.Result.ALLOW);
+        }
+        if (gameEvent.isCancelled()) {
+            event.setCanceled(true);
+            event.setCancellationResult(gameEvent.cancellationResult());
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        // 客户端也要派发，才能取消村民交易等本地 UI
+        EntityInteractEvent gameEvent = new EntityInteractEvent(
+                event.getEntity(),
+                event.getLevel(),
+                event.getItemStack(),
+                event.getHand(),
+                event.getTarget());
+        post(GameEventType.ENTITY_INTERACT, gameEvent);
+        if (gameEvent.isCancelled()) {
+            event.setCanceled(true);
+            event.setCancellationResult(gameEvent.cancellationResult());
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
+        EntityInteractEvent gameEvent = new EntityInteractEvent(
+                event.getEntity(),
+                event.getLevel(),
+                event.getItemStack(),
+                event.getHand(),
+                event.getTarget());
+        post(GameEventType.ENTITY_INTERACT, gameEvent);
+        if (gameEvent.isCancelled()) {
+            event.setCanceled(true);
+            event.setCancellationResult(gameEvent.cancellationResult());
         }
     }
 

@@ -6,14 +6,13 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.BarrelBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.DropperBlock;
-import net.minecraft.world.level.block.FurnaceBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -26,19 +25,26 @@ public final class PlungerContainerHandler {
 
     public static boolean trySuckContainer(Level level, BlockPos pos, BlockState state, Player player, int fortune) {
         Block block = state.getBlock();
-        if (!(block instanceof ChestBlock || block instanceof FurnaceBlock || block instanceof BarrelBlock
-                || block instanceof DispenserBlock || block instanceof DropperBlock)) {
+        if (!(block instanceof ChestBlock
+                || block instanceof AbstractFurnaceBlock
+                || block instanceof BarrelBlock
+                || block instanceof DispenserBlock
+                || block instanceof DropperBlock)) {
             return false;
         }
         BlockEntity be = level.getBlockEntity(pos);
-        if (be == null) {
+        if (!(be instanceof Container container)) {
             return false;
         }
-        int slot = pickNonEmptySlot(be);
+        // 未打开过的战利品箱需要先展开战利品表
+        if (be instanceof RandomizableContainerBlockEntity randomizable) {
+            randomizable.unpackLootTable(player);
+        }
+        int slot = pickNonEmptySlot(container, level);
         if (slot < 0) {
             return false;
         }
-        ItemStack extracted = extractOne(be, slot);
+        ItemStack extracted = extractOne(container, slot);
         if (extracted.isEmpty()) {
             return false;
         }
@@ -48,38 +54,20 @@ public final class PlungerContainerHandler {
         return true;
     }
 
-    private static int pickNonEmptySlot(BlockEntity be) {
+    private static int pickNonEmptySlot(Container container, Level level) {
         List<Integer> slots = new ArrayList<>();
-        if (be instanceof RandomizableContainerBlockEntity container) {
-            for (int i = 0; i < container.getContainerSize(); i++) {
-                if (!container.getItem(i).isEmpty()) {
-                    slots.add(i);
-                }
-            }
-        } else if (be instanceof FurnaceBlockEntity furnace) {
-            for (int i = 0; i < 3; i++) {
-                if (!furnace.getItem(i).isEmpty()) {
-                    slots.add(i);
-                }
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            if (!container.getItem(i).isEmpty()) {
+                slots.add(i);
             }
         }
         if (slots.isEmpty()) {
             return -1;
         }
-        return slots.get(be.getLevel() != null
-                ? be.getLevel().random.nextInt(slots.size())
-                : 0);
+        return slots.get(level.random.nextInt(slots.size()));
     }
 
-    private static ItemStack extractOne(BlockEntity be, int slot) {
-        Container container;
-        if (be instanceof RandomizableContainerBlockEntity randomizable) {
-            container = randomizable;
-        } else if (be instanceof FurnaceBlockEntity furnace) {
-            container = furnace;
-        } else {
-            return ItemStack.EMPTY;
-        }
+    private static ItemStack extractOne(Container container, int slot) {
         ItemStack stack = container.getItem(slot);
         if (stack.isEmpty()) {
             return ItemStack.EMPTY;

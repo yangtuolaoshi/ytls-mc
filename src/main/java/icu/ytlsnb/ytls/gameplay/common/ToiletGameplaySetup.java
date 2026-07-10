@@ -4,6 +4,7 @@ import icu.ytlsnb.ytls.framework.bootstrap.LifecyclePhase;
 import icu.ytlsnb.ytls.framework.bootstrap.annotation.OnLifecycle;
 import icu.ytlsnb.ytls.framework.event.annotation.Listen;
 import icu.ytlsnb.ytls.framework.event.api.GameEventType;
+import icu.ytlsnb.ytls.framework.event.events.PlayerLogoutEvent;
 import icu.ytlsnb.ytls.framework.event.events.PlayerTickEvent;
 import icu.ytlsnb.ytls.gameplay.plunger.handler.PlungerSuctionHandler;
 import icu.ytlsnb.ytls.framework.registry.RegistryAccess;
@@ -24,6 +25,11 @@ public final class ToiletGameplaySetup {
             return;
         }
         PlungerSuctionHandler.tickPlayer(event.player());
+    }
+
+    @Listen(GameEventType.PLAYER_LOGOUT)
+    public static void onPlayerLogout(PlayerLogoutEvent event) {
+        PlungerSuctionHandler.clearPlayer(event.player().getUUID());
     }
 
     @OnLifecycle(LifecyclePhase.DATA_GEN)

@@ -38,11 +38,17 @@ public class PlungerItem extends Item {
         if (player == null) {
             return InteractionResult.PASS;
         }
-        // Shift 时优先处理实体吸附/发射，不对方块生效
+        ItemStack stack = context.getItemInHand();
+        // 吸附中：任意右键发射
+        if (PlungerSuctionHandler.hasSuckedEntity(stack)) {
+            return PlungerSuctionHandler.launchSucked(player, stack)
+                    ? InteractionResult.CONSUME
+                    : InteractionResult.FAIL;
+        }
+        // Shift 时优先处理实体吸附，不对方块生效
         if (player.isShiftKeyDown()) {
             return InteractionResult.PASS;
         }
-        ItemStack stack = context.getItemInHand();
         BlockPos pos = context.getClickedPos();
         BlockState state = level.getBlockState(pos);
 
@@ -59,17 +65,22 @@ public class PlungerItem extends Item {
         return InteractionResult.PASS;
     }
 
+    /**
+     * 实体交互主路径在 {@link icu.ytlsnb.ytls.gameplay.plunger.handler.PlungerInteractionHandler}，
+     * 此处保留为兜底（事件未拦截时仍可生效）。
+     */
     @Override
     public InteractionResult interactLivingEntity(ItemStack stack, Player player, LivingEntity entity, InteractionHand hand) {
         if (player.level().isClientSide) {
             return InteractionResult.SUCCESS;
         }
+        // 吸附中：任意右键发射，不再造成伤害
+        if (PlungerSuctionHandler.hasSuckedEntity(stack)) {
+            return PlungerSuctionHandler.launchSucked(player, stack)
+                    ? InteractionResult.CONSUME
+                    : InteractionResult.FAIL;
+        }
         if (player.isShiftKeyDown()) {
-            if (PlungerSuctionHandler.hasSuckedEntity(stack)) {
-                return PlungerSuctionHandler.launchSucked(player, stack)
-                        ? InteractionResult.CONSUME
-                        : InteractionResult.FAIL;
-            }
             return PlungerSuctionHandler.tryCapture(player, stack, entity)
                     ? InteractionResult.CONSUME
                     : InteractionResult.FAIL;
@@ -85,19 +96,19 @@ public class PlungerItem extends Item {
         if (level.isClientSide) {
             return InteractionResultHolder.success(stack);
         }
-        if (!player.isShiftKeyDown()) {
-            // 非 Shift：对准生物也可吸（村民等会抢交互的情况）
-            LivingEntity target = findLookTarget(player, 5.0D);
-            if (target != null && PlungerEntityHandler.handle(player, stack, target)) {
-                return InteractionResultHolder.consume(stack);
-            }
-            return InteractionResultHolder.pass(stack);
-        }
+        // 吸附中：任意右键（对空）发射
         if (PlungerSuctionHandler.hasSuckedEntity(stack)) {
             if (PlungerSuctionHandler.launchSucked(player, stack)) {
                 return InteractionResultHolder.consume(stack);
             }
             return InteractionResultHolder.fail(stack);
+        }
+        if (!player.isShiftKeyDown()) {
+            LivingEntity target = findLookTarget(player, 5.0D);
+            if (target != null && PlungerEntityHandler.handle(player, stack, target)) {
+                return InteractionResultHolder.consume(stack);
+            }
+            return InteractionResultHolder.pass(stack);
         }
         LivingEntity target = findLookTarget(player, 5.0D);
         if (target != null && PlungerSuctionHandler.tryCapture(player, stack, target)) {
