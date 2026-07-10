@@ -3,6 +3,7 @@ PLACEHOLDER: 请在此目录放置物品贴图 PNG。
 文件名：
 - plunger.png — 马桶塞（皮革头 + 木棍）
 - plunger_gun.png — 马桶塞枪
+- plunger_hook.png — 马桶塞枪飞行钩外观（可与马桶塞不同）
 - poop.png — 便便食物
 
 建议风格：荒诞、夸张、搞笑。

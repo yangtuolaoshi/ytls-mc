@@ -1,8 +1,15 @@
 {
   "itemGroup.ytls.example_tab": "Example Tab",
   "itemGroup.ytls.main": "YTLS Creative",
+  "itemGroup.ytls.toilet_tab": "Plunger",
 
   "block.ytls.example_block": "Example Block",
+  "block.ytls.toilet": "Toilet",
+  "item.ytls.toilet": "Toilet",
+  "item.ytls.plunger": "Plunger",
+  "item.ytls.plunger_gun": "Plunger Gun",
+  "item.ytls.plunger_hook": "Plunger Hook (Visual)",
+  "item.ytls.poop": "Poop",
   "item.ytls.example_ingot": "Example Ingot",
 
   "effect.ytls.example_brisk": "Example Brisk",

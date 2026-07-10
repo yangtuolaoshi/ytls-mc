@@ -91,6 +91,7 @@ public class PlungerHookRenderer extends EntityRenderer<PlungerHookEntity> {
 
     @Override
     public ResourceLocation getTextureLocation(PlungerHookEntity entity) {
-        return ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/fishing_hook.png");
+        // 实际渲染走物品模型；此路径供 EntityRenderer 契约使用
+        return ResourceLocation.fromNamespaceAndPath("ytls", "textures/item/plunger_hook.png");
     }
 }

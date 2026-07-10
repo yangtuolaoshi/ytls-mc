@@ -461,7 +461,8 @@ public class PlungerHookEntity extends Projectile {
     }
 
     public ItemStack getDisplayedItem() {
-        return new ItemStack(RegistryAccess.item("plunger"));
+        // 使用独立外观物品，与手持马桶塞贴图分离
+        return new ItemStack(RegistryAccess.item("plunger_hook"));
     }
 
     @Override
