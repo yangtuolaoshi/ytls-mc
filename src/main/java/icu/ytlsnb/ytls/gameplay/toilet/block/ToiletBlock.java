@@ -22,7 +22,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,11 +30,7 @@ public class ToiletBlock extends BaseEntityBlock {
     public static final MapCodec<ToiletBlock> CODEC = simpleCodec(ToiletBlock::new);
     public static final IntegerProperty POOP_COUNT = IntegerProperty.create("poop_count", 0, 3);
 
-    private static final VoxelShape SHAPE = Shapes.or(
-            Block.box(2, 0, 2, 14, 6, 14),
-            Block.box(3, 6, 3, 13, 10, 13),
-            Block.box(4, 10, 8, 12, 14, 14)
-    );
+    private static final VoxelShape SHAPE = Block.box(1.0D, 0.0D, 3.0D, 14.0D, 15.0D, 13.0D);
 
     private static BlockBehaviour.Properties defaultProperties() {
         return BlockBehaviour.Properties.of()

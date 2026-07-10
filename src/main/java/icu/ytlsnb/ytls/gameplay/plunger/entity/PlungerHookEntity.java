@@ -499,7 +499,7 @@ public class PlungerHookEntity extends Projectile {
     }
 
     public ItemStack getDisplayedItem() {
-        // 使用独立外观物品，与手持马桶塞贴图分离
+        // 兼容保留：实际飞行外观由 PlungerHookModel + entity 贴图渲染
         return new ItemStack(RegistryAccess.item("plunger_hook"));
     }
 

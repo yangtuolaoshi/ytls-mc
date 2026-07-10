@@ -1,16 +1,28 @@
 package icu.ytlsnb.ytls.gameplay.client;
 
+import icu.ytlsnb.ytls.ModConstants;
 import icu.ytlsnb.ytls.framework.bootstrap.LifecyclePhase;
 import icu.ytlsnb.ytls.framework.bootstrap.annotation.OnLifecycle;
 import icu.ytlsnb.ytls.framework.registry.RegistryAccess;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryKind;
+import icu.ytlsnb.ytls.gameplay.client.model.PlungerHookModel;
 import icu.ytlsnb.ytls.gameplay.plunger.entity.PlungerHookEntity;
 import icu.ytlsnb.ytls.gameplay.toilet.entity.ToiletSeatEntity;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.NoopRenderer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = ModConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ToiletClientSetup {
     private ToiletClientSetup() {
+    }
+
+    @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(PlungerHookModel.LAYER_LOCATION, PlungerHookModel::createBodyLayer);
     }
 
     @OnLifecycle(LifecyclePhase.CLIENT_SETUP)

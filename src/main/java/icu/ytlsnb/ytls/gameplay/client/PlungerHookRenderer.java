@@ -3,39 +3,46 @@ package icu.ytlsnb.ytls.gameplay.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import icu.ytlsnb.ytls.ModConstants;
+import icu.ytlsnb.ytls.gameplay.client.model.PlungerHookModel;
 import icu.ytlsnb.ytls.gameplay.plunger.entity.PlungerHookEntity;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 public class PlungerHookRenderer extends EntityRenderer<PlungerHookEntity> {
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "textures/entity/plunger_hook.png");
+
+    private final PlungerHookModel<PlungerHookEntity> model;
+
     public PlungerHookRenderer(EntityRendererProvider.Context context) {
         super(context);
+        this.model = new PlungerHookModel<>(context.bakeLayer(PlungerHookModel.LAYER_LOCATION));
     }
 
     @Override
     public void render(PlungerHookEntity entity, float entityYaw, float partialTicks, PoseStack poseStack,
                        MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
-        // 略缩小，减少贴地时模型穿进方块
-        poseStack.translate(0.0D, 0.05D, 0.0D);
-        poseStack.scale(0.85F, 0.85F, 0.85F);
-        poseStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(partialTicks, entity.yRotO, entity.getYRot()) - 90.0F));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(Mth.lerp(partialTicks, entity.xRotO, entity.getXRot())));
-        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
-        itemRenderer.renderStatic(entity.getDisplayedItem(), ItemDisplayContext.FIXED, packedLight,
-                OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.level(), entity.getId());
+        poseStack.translate(0.0D, 0.1D, 0.0D);
+        // 相对飞行朝向再转 180°，纠正模型前后颠倒
+        poseStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(partialTicks, entity.yRotO, entity.getYRot()) + 90.0F));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(Mth.lerp(partialTicks, entity.xRotO, entity.getXRot()) + 90.0F));
+        poseStack.scale(0.5F, 0.5F, 0.5F);
+        // Blockbench 根节点 offset Y=24 → 1.5 格，拉回实体原点附近
+        poseStack.translate(0.0D, -1.5D, 0.0D);
+
+        VertexConsumer consumer = buffer.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
+        model.renderToBuffer(poseStack, consumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
         poseStack.popPose();
 
         Player owner = entity.getGunOwner();
@@ -62,7 +69,6 @@ public class PlungerHookRenderer extends EntityRenderer<PlungerHookEntity> {
         float dy = (float) (hand.y - hookPos.y);
         float dz = (float) (hand.z - hookPos.z);
         float span = Mth.sqrt(dx * dx + dy * dy + dz * dz);
-        // 下垂幅度随距离缩放，且不超过两端最低点，避免贴地时线穿进地面
         float maxSag = Math.min(0.2F, span * 0.08F);
         float floorY = Math.min(0.0F, dy) + 0.02F;
 
@@ -91,7 +97,6 @@ public class PlungerHookRenderer extends EntityRenderer<PlungerHookEntity> {
 
     @Override
     public ResourceLocation getTextureLocation(PlungerHookEntity entity) {
-        // 实际渲染走物品模型；此路径供 EntityRenderer 契约使用
-        return ResourceLocation.fromNamespaceAndPath("ytls", "textures/item/plunger_hook.png");
+        return TEXTURE;
     }
 }
