@@ -56,6 +56,10 @@ public class PlungerHookEntity extends Projectile {
     private static final double MAX_RANGE = 48.0D;
     private static final double REEL_SPEED = 3.2D;
     private static final double PULL_STRENGTH = 1.35D;
+    /** 收回生物/掉落物时落在玩家身前的空隙 */
+    private static final double REEL_FRONT_GAP = 0.65D;
+    private static final double REEL_FRONT_MIN = 1.05D;
+    private static final double REEL_FRONT_MAX = 2.0D;
     /** 命中面法线外偏，避免模型/连线埋进方块 */
     private static final double SURFACE_OFFSET = 0.2D;
     private static final float AIR_DRAG = 0.99F;
@@ -271,11 +275,16 @@ public class PlungerHookEntity extends Projectile {
         if (latchMode == HookMode.ENTITY || latchMode == HookMode.ITEM) {
             Entity target = resolveHookedEntity();
             if (target != null && target.isAlive()) {
-                pullToward(target, owner.position().add(0.0D, owner.getBbHeight() * 0.5D, 0.0D), PULL_STRENGTH);
+                // 拉向玩家身前落点，而不是身体中心，避免冲过头甩到身后
+                Vec3 dropPos = frontDropPos(owner, target);
+                Vec3 pullDest = dropPos.add(0.0D, Math.max(0.2D, target.getBbHeight() * 0.35D), 0.0D);
+                pullToward(target, pullDest, PULL_STRENGTH);
                 setPos(latchMode == HookMode.ENTITY
                         ? target.position().add(0.0D, target.getBbHeight() * 0.5D, 0.0D)
                         : target.position());
-                if (!level().isClientSide && target.distanceToSqr(owner) < 2.25D) {
+                if (!level().isClientSide
+                        && (target.distanceToSqr(dropPos) < 1.21D || target.distanceToSqr(owner) < 1.0D)) {
+                    settleInFront(owner, target, dropPos);
                     finishReel(owner);
                 }
                 return;
@@ -310,6 +319,35 @@ public class PlungerHookEntity extends Projectile {
         if (entity instanceof Player player) {
             player.fallDistance = 0.0F;
         }
+    }
+
+    /** 玩家水平朝向前方的落点，按双方碰撞箱留空隙 */
+    private static Vec3 frontDropPos(Player owner, Entity target) {
+        Vec3 flat = flatLook(owner);
+        double dist = owner.getBbWidth() * 0.5D + target.getBbWidth() * 0.5D + REEL_FRONT_GAP;
+        dist = Math.max(REEL_FRONT_MIN, Math.min(dist, REEL_FRONT_MAX));
+        return owner.position().add(flat.scale(dist));
+    }
+
+    private static Vec3 flatLook(Player owner) {
+        Vec3 look = owner.getLookAngle();
+        Vec3 flat = new Vec3(look.x, 0.0D, look.z);
+        if (flat.lengthSqr() < 1.0E-6D) {
+            float yaw = owner.getYRot() * ((float) Math.PI / 180.0F);
+            flat = new Vec3(-Math.sin(yaw), 0.0D, Math.cos(yaw));
+        }
+        return flat.normalize();
+    }
+
+    /** 收回结束：放到身前并清掉冲量，防止惯性甩到身后 */
+    private static void settleInFront(Player owner, Entity target, Vec3 dropPos) {
+        target.moveTo(dropPos.x, dropPos.y, dropPos.z, target.getYRot(), target.getXRot());
+        target.setPos(dropPos.x, dropPos.y, dropPos.z);
+        // 仅保留极小的朝前速度，避免继续穿到玩家身后
+        target.setDeltaMovement(flatLook(owner).scale(0.12D));
+        target.hurtMarked = true;
+        target.hasImpulse = true;
+        target.fallDistance = 0.0F;
     }
 
     public void startReelIn() {
