@@ -23,10 +23,7 @@ public final class PlungerBlockHandler {
             return false;
         }
         ToiletBlock.setPoopCount(level, pos, count - 1);
-        ItemStack poop = new ItemStack(RegistryAccess.item("poop"));
-        ItemEntity entity = new ItemEntity(level, pos.getX() + 0.5D, pos.getY() + 0.8D, pos.getZ() + 0.5D, poop);
-        entity.setDefaultPickUpDelay();
-        level.addFreshEntity(entity);
+        spawnItem(level, pos.above(), new ItemStack(RegistryAccess.item("poop")));
         return true;
     }
 
@@ -55,12 +52,34 @@ public final class PlungerBlockHandler {
         return true;
     }
 
-    public static void spawnDrops(ServerLevel level, BlockPos pos, ItemStack stack, int fortune) {
-        int count = 1 + level.random.nextInt(1 + fortune);
-        for (int i = 0; i < count; i++) {
-            ItemEntity entity = new ItemEntity(level, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, stack.copy());
-            entity.setDefaultPickUpDelay();
-            level.addFreshEntity(entity);
+    public static void spawnItem(Level level, BlockPos pos, ItemStack stack) {
+        if (stack.isEmpty()) {
+            return;
         }
+        ItemEntity entity = new ItemEntity(
+                level,
+                pos.getX() + 0.5D,
+                pos.getY() + 0.5D,
+                pos.getZ() + 0.5D,
+                stack.copy()
+        );
+        entity.setDefaultPickUpDelay();
+        level.addFreshEntity(entity);
+    }
+
+    /** 矿物等：按堆叠复制，时运增加份数 */
+    public static void spawnFortuneCopies(ServerLevel level, BlockPos pos, ItemStack stack, int fortune) {
+        if (stack.isEmpty()) {
+            return;
+        }
+        int copies = 1 + level.random.nextInt(1 + fortune);
+        for (int i = 0; i < copies; i++) {
+            spawnItem(level, pos, stack);
+        }
+    }
+
+    /** @deprecated 使用 {@link #spawnFortuneCopies} 或 {@link #spawnItem} */
+    public static void spawnDrops(ServerLevel level, BlockPos pos, ItemStack stack, int fortune) {
+        spawnFortuneCopies(level, pos, stack, fortune);
     }
 }

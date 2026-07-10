@@ -3,7 +3,6 @@ package icu.ytlsnb.ytls.gameplay.plunger.handler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
-import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -35,63 +34,59 @@ public final class PlungerContainerHandler {
         if (be == null) {
             return false;
         }
-        List<ItemStack> candidates = collectItems(be);
-        if (candidates.isEmpty()) {
+        int slot = pickNonEmptySlot(be);
+        if (slot < 0) {
             return false;
         }
-        ItemStack picked = candidates.get(level.random.nextInt(candidates.size()));
-        removeOne(be, picked);
+        ItemStack extracted = extractOne(be, slot);
+        if (extracted.isEmpty()) {
+            return false;
+        }
         if (level instanceof ServerLevel serverLevel) {
-            PlungerBlockHandler.spawnDrops(serverLevel, pos.above(), picked, fortune);
+            PlungerBlockHandler.spawnFortuneCopies(serverLevel, pos.above(), extracted, fortune);
         }
         return true;
     }
 
-    private static List<ItemStack> collectItems(BlockEntity be) {
-        List<ItemStack> items = new ArrayList<>();
+    private static int pickNonEmptySlot(BlockEntity be) {
+        List<Integer> slots = new ArrayList<>();
         if (be instanceof RandomizableContainerBlockEntity container) {
             for (int i = 0; i < container.getContainerSize(); i++) {
-                ItemStack stack = container.getItem(i);
-                if (!stack.isEmpty()) {
-                    items.add(stack);
+                if (!container.getItem(i).isEmpty()) {
+                    slots.add(i);
                 }
             }
         } else if (be instanceof FurnaceBlockEntity furnace) {
-            addIfPresent(items, furnace.getItem(0));
-            addIfPresent(items, furnace.getItem(1));
-            addIfPresent(items, furnace.getItem(2));
-        }
-        return items;
-    }
-
-    private static void addIfPresent(List<ItemStack> items, ItemStack stack) {
-        if (!stack.isEmpty()) {
-            items.add(stack);
-        }
-    }
-
-    private static void removeOne(BlockEntity be, ItemStack template) {
-        if (be instanceof RandomizableContainerBlockEntity container) {
-            for (int i = 0; i < container.getContainerSize(); i++) {
-                ItemStack stack = container.getItem(i);
-                if (ItemStack.isSameItemSameTags(stack, template)) {
-                    stack.shrink(1);
-                    container.setChanged();
-                    return;
+            for (int i = 0; i < 3; i++) {
+                if (!furnace.getItem(i).isEmpty()) {
+                    slots.add(i);
                 }
             }
-        } else if (be instanceof FurnaceBlockEntity furnace) {
-            shrinkMatching(furnace, template, 0);
-            shrinkMatching(furnace, template, 1);
-            shrinkMatching(furnace, template, 2);
         }
+        if (slots.isEmpty()) {
+            return -1;
+        }
+        return slots.get(be.getLevel() != null
+                ? be.getLevel().random.nextInt(slots.size())
+                : 0);
     }
 
-    private static void shrinkMatching(Container container, ItemStack template, int slot) {
+    private static ItemStack extractOne(BlockEntity be, int slot) {
+        Container container;
+        if (be instanceof RandomizableContainerBlockEntity randomizable) {
+            container = randomizable;
+        } else if (be instanceof FurnaceBlockEntity furnace) {
+            container = furnace;
+        } else {
+            return ItemStack.EMPTY;
+        }
         ItemStack stack = container.getItem(slot);
-        if (ItemStack.isSameItemSameTags(stack, template)) {
-            stack.shrink(1);
-            container.setChanged();
+        if (stack.isEmpty()) {
+            return ItemStack.EMPTY;
         }
+        ItemStack one = stack.copyWithCount(1);
+        stack.shrink(1);
+        container.setChanged();
+        return one;
     }
 }

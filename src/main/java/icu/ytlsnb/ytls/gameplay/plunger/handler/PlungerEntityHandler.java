@@ -3,8 +3,7 @@ package icu.ytlsnb.ytls.gameplay.plunger.handler;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.AbstractFish;
-import net.minecraft.world.entity.animal.AbstractSchoolingFish;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -21,16 +20,22 @@ public final class PlungerEntityHandler {
         if (!PlungerBlockHandler.damagePlunger(plunger, player)) {
             return false;
         }
-        int looting = plunger.getEnchantmentLevel(net.minecraft.world.item.enchantment.Enchantments.MOB_LOOTING);
-        target.hurt(player.damageSources().generic(), 3.0F);
-
-        if (player.level() instanceof ServerLevel serverLevel) {
-            if (target instanceof Villager) {
-                PlungerBlockHandler.spawnDrops(serverLevel, target.blockPosition(), new ItemStack(Items.EMERALD), looting);
-            } else if (!(target instanceof AbstractFish) && !(target instanceof AbstractSchoolingFish)) {
-                dropDeathLoot(serverLevel, player, target, looting);
-            }
+        // 无敌帧内 hurt 会失败：此时不掉落，保证「受伤次数 = 掉落次数」
+        boolean damaged = target.hurt(player.damageSources().playerAttack(player), 3.0F);
+        if (!damaged || !(player.level() instanceof ServerLevel serverLevel)) {
+            return true;
         }
+
+        int looting = plunger.getEnchantmentLevel(net.minecraft.world.item.enchantment.Enchantments.MOB_LOOTING);
+        if (target instanceof AbstractVillager) {
+            ItemStack emerald = new ItemStack(Items.EMERALD, 1 + serverLevel.random.nextInt(1 + looting));
+            PlungerBlockHandler.spawnItem(serverLevel, target.blockPosition(), emerald);
+            return true;
+        }
+        if (target instanceof AbstractFish) {
+            return true;
+        }
+        dropDeathLoot(serverLevel, player, target, looting);
         return true;
     }
 
@@ -39,11 +44,12 @@ public final class PlungerEntityHandler {
         LootParams params = new LootParams.Builder(level)
                 .withParameter(LootContextParams.THIS_ENTITY, target)
                 .withParameter(LootContextParams.ORIGIN, target.position())
-                .withParameter(LootContextParams.DAMAGE_SOURCE, player.damageSources().generic())
+                .withParameter(LootContextParams.DAMAGE_SOURCE, player.damageSources().playerAttack(player))
                 .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, player)
                 .withLuck(player.getLuck() + looting)
                 .create(LootContextParamSets.ENTITY);
+        // 直接生成战利品，不再对每个堆叠做时运倍增，避免一次吸出大量物品
         table.getRandomItems(params, stack ->
-                PlungerBlockHandler.spawnDrops(level, target.blockPosition(), stack, looting));
+                PlungerBlockHandler.spawnItem(level, target.blockPosition(), stack));
     }
 }

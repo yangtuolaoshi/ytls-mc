@@ -1,24 +1,29 @@
 package icu.ytlsnb.ytls.gameplay.plunger.handler;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.monster.Silverfish;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BannerBlock;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.InfestedBlock;
 import net.minecraft.world.level.block.SpawnerBlock;
+import net.minecraft.world.level.block.WallBannerBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.HashMap;
@@ -34,8 +39,7 @@ public final class PlungerTransformHandler {
 
     static {
         SIMPLE_TRANSFORMS.put(Blocks.GRASS_BLOCK, Blocks.DIRT);
-
-        registerLogs();
+        registerLogsAndStems();
         registerOres();
         registerInfested();
         registerDyed();
@@ -50,6 +54,12 @@ public final class PlungerTransformHandler {
 
         if (block instanceof SpawnerBlock) {
             return handleSpawner(level, pos, fortune);
+        }
+        if (block instanceof BedBlock) {
+            return handleBed(level, pos, state);
+        }
+        if (block instanceof BannerBlock || block instanceof WallBannerBlock) {
+            return handleBanner(level, pos, state);
         }
 
         Block target = SIMPLE_TRANSFORMS.get(block);
@@ -72,13 +82,71 @@ public final class PlungerTransformHandler {
         if (level instanceof ServerLevel serverLevel) {
             Item drop = ORE_DROPS.get(block);
             if (drop != null) {
-                PlungerBlockHandler.spawnDrops(serverLevel, pos, new ItemStack(drop), fortune);
+                PlungerBlockHandler.spawnFortuneCopies(serverLevel, pos, new ItemStack(drop), fortune);
             }
             if (INFESTED_TRANSFORMS.containsKey(block)) {
                 spawnSilverfish(serverLevel, pos, 1 + fortune);
             }
-            level.setBlock(pos, target.defaultBlockState(), Block.UPDATE_ALL);
+            // 尽量保留朝向等属性
+            BlockState newState = copyCompatibleProperties(state, target.defaultBlockState());
+            level.setBlock(pos, newState, Block.UPDATE_ALL);
         }
+        return true;
+    }
+
+    private static boolean handleBed(Level level, BlockPos pos, BlockState state) {
+        if (!(state.getBlock() instanceof BedBlock) || state.getBlock() == Blocks.WHITE_BED) {
+            return false;
+        }
+        if (!(level instanceof ServerLevel)) {
+            return true;
+        }
+        Direction facing = state.getValue(BedBlock.FACING);
+        BedPart part = state.getValue(BedBlock.PART);
+        boolean occupied = state.getValue(BedBlock.OCCUPIED);
+        BlockPos otherPos = pos.relative(part == BedPart.FOOT ? facing : facing.getOpposite());
+        BlockState otherState = level.getBlockState(otherPos);
+
+        BlockState newHere = Blocks.WHITE_BED.defaultBlockState()
+                .setValue(BedBlock.FACING, facing)
+                .setValue(BedBlock.PART, part)
+                .setValue(BedBlock.OCCUPIED, occupied);
+
+        if (otherState.getBlock() instanceof BedBlock) {
+            BedPart otherPart = part == BedPart.FOOT ? BedPart.HEAD : BedPart.FOOT;
+            boolean otherOccupied = otherState.hasProperty(BedBlock.OCCUPIED)
+                    ? otherState.getValue(BedBlock.OCCUPIED)
+                    : occupied;
+            BlockState newOther = Blocks.WHITE_BED.defaultBlockState()
+                    .setValue(BedBlock.FACING, facing)
+                    .setValue(BedBlock.PART, otherPart)
+                    .setValue(BedBlock.OCCUPIED, otherOccupied);
+            // 先改另一半，避免原版床方块校验拆掉半截
+            level.setBlock(otherPos, newOther, 2);
+        }
+        level.setBlock(pos, newHere, 3);
+        return true;
+    }
+
+    private static boolean handleBanner(Level level, BlockPos pos, BlockState state) {
+        Block block = state.getBlock();
+        if (block == Blocks.WHITE_BANNER || block == Blocks.WHITE_WALL_BANNER) {
+            return false;
+        }
+        if (!(level instanceof ServerLevel)) {
+            return true;
+        }
+        BlockState replacement;
+        if (block instanceof WallBannerBlock) {
+            replacement = Blocks.WHITE_WALL_BANNER.defaultBlockState()
+                    .setValue(WallBannerBlock.FACING, state.getValue(WallBannerBlock.FACING));
+        } else if (block instanceof BannerBlock) {
+            replacement = Blocks.WHITE_BANNER.defaultBlockState()
+                    .setValue(BannerBlock.ROTATION, state.getValue(BannerBlock.ROTATION));
+        } else {
+            return false;
+        }
+        level.setBlock(pos, replacement, Block.UPDATE_ALL);
         return true;
     }
 
@@ -97,7 +165,8 @@ public final class PlungerTransformHandler {
         }
         int count = 5 + serverLevel.random.nextInt(4) + fortune * 2;
         for (int i = 0; i < count; i++) {
-            type.spawn(serverLevel, pos, MobSpawnType.SPAWNER);
+            BlockPos spawnPos = PlungerSpawnHelper.findNearbySpace(serverLevel, pos);
+            type.spawn(serverLevel, spawnPos, MobSpawnType.SPAWNER);
         }
         return true;
     }
@@ -105,19 +174,36 @@ public final class PlungerTransformHandler {
     private static void spawnSilverfish(ServerLevel level, BlockPos pos, int count) {
         for (int i = 0; i < count; i++) {
             Silverfish fish = EntityType.SILVERFISH.create(level);
-            if (fish != null) {
-                fish.moveTo(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, level.random.nextFloat() * 360.0F, 0.0F);
-                level.addFreshEntity(fish);
+            if (fish == null) {
+                continue;
             }
+            BlockPos spawnPos = PlungerSpawnHelper.findNearbySpace(level, pos);
+            Vec3 center = PlungerSpawnHelper.centerOf(spawnPos);
+            fish.moveTo(center.x, center.y, center.z, level.random.nextFloat() * 360.0F, 0.0F);
+            level.addFreshEntity(fish);
         }
     }
 
-    private static void registerLogs() {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static BlockState copyCompatibleProperties(BlockState from, BlockState to) {
+        BlockState result = to;
+        for (net.minecraft.world.level.block.state.properties.Property property : from.getProperties()) {
+            if (result.hasProperty(property)) {
+                result = result.setValue(property, from.getValue(property));
+            }
+        }
+        return result;
+    }
+
+    private static void registerLogsAndStems() {
         for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
             Block block = entry.getValue();
             ResourceLocation id = entry.getKey().location();
             String name = id.getPath();
-            if (name.endsWith("_log") && !name.startsWith("stripped_")) {
+            if (name.startsWith("stripped_")) {
+                continue;
+            }
+            if (name.endsWith("_log") || name.endsWith("_stem") || name.endsWith("_hyphae")) {
                 Block stripped = ForgeRegistries.BLOCKS.getValue(id.withPrefix("stripped_"));
                 if (stripped != null && stripped != Blocks.AIR) {
                     SIMPLE_TRANSFORMS.put(block, stripped);
@@ -164,103 +250,30 @@ public final class PlungerTransformHandler {
     }
 
     private static void registerDyed() {
-        dyedWool();
-        dyedTerracotta();
-        dyedGlass();
-        dyedConcrete();
-        dyedConcretePowder();
-        dyedCarpet();
-        dyedBed();
-        dyedShulkerBox();
-        dyedCandle();
-        dyedBanner();
-    }
-
-    private static void dyedWool() {
         for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
+            Block block = entry.getValue();
             String path = entry.getKey().location().getPath();
             if (path.endsWith("_wool") && !path.equals("white_wool")) {
-                DYED_TRANSFORMS.put(entry.getValue(), Blocks.WHITE_WOOL);
+                DYED_TRANSFORMS.put(block, Blocks.WHITE_WOOL);
+            } else if (path.endsWith("_terracotta") && !path.equals("terracotta") && !path.equals("white_terracotta")) {
+                DYED_TRANSFORMS.put(block, Blocks.WHITE_TERRACOTTA);
+            } else if (path.endsWith("_stained_glass")) {
+                DYED_TRANSFORMS.put(block, Blocks.GLASS);
+            } else if (path.endsWith("_stained_glass_pane")) {
+                DYED_TRANSFORMS.put(block, Blocks.GLASS_PANE);
+            } else if (path.endsWith("_concrete") && !path.endsWith("_powder") && !path.equals("white_concrete")) {
+                DYED_TRANSFORMS.put(block, Blocks.WHITE_CONCRETE);
+            } else if (path.endsWith("_concrete_powder") && !path.equals("white_concrete_powder")) {
+                DYED_TRANSFORMS.put(block, Blocks.WHITE_CONCRETE_POWDER);
+            } else if (path.endsWith("_carpet") && !path.equals("white_carpet")) {
+                DYED_TRANSFORMS.put(block, Blocks.WHITE_CARPET);
+            } else if (path.endsWith("shulker_box") && !path.equals("shulker_box")) {
+                DYED_TRANSFORMS.put(block, Blocks.SHULKER_BOX);
+            } else if (path.endsWith("_candle") && !path.equals("candle")) {
+                DYED_TRANSFORMS.put(block, Blocks.CANDLE);
             }
+            // 床与旗帜单独处理，避免半截床 / 丢失朝向
         }
-    }
-
-    private static void dyedTerracotta() {
-        for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
-            String path = entry.getKey().location().getPath();
-            if (path.endsWith("_terracotta") && !path.equals("terracotta") && !path.equals("white_terracotta")) {
-                DYED_TRANSFORMS.put(entry.getValue(), Blocks.WHITE_TERRACOTTA);
-            }
-        }
-    }
-
-    private static void dyedGlass() {
-        for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
-            String path = entry.getKey().location().getPath();
-            if (path.endsWith("_stained_glass") || (path.endsWith("_glass") && path.contains("_") && !path.equals("tinted_glass"))) {
-                if (path.contains("stained") || !path.equals("glass")) {
-                    DYED_TRANSFORMS.put(entry.getValue(), Blocks.GLASS);
-                }
-            }
-        }
-    }
-
-    private static void dyedConcrete() {
-        for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
-            String path = entry.getKey().location().getPath();
-            if (path.endsWith("_concrete") && !path.equals("white_concrete")) {
-                DYED_TRANSFORMS.put(entry.getValue(), Blocks.WHITE_CONCRETE);
-            }
-        }
-    }
-
-    private static void dyedConcretePowder() {
-        for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
-            String path = entry.getKey().location().getPath();
-            if (path.endsWith("_concrete_powder") && !path.equals("white_concrete_powder")) {
-                DYED_TRANSFORMS.put(entry.getValue(), Blocks.WHITE_CONCRETE_POWDER);
-            }
-        }
-    }
-
-    private static void dyedCarpet() {
-        for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
-            String path = entry.getKey().location().getPath();
-            if (path.endsWith("_carpet") && !path.equals("white_carpet")) {
-                DYED_TRANSFORMS.put(entry.getValue(), Blocks.WHITE_CARPET);
-            }
-        }
-    }
-
-    private static void dyedBed() {
-        for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
-            String path = entry.getKey().location().getPath();
-            if (path.endsWith("_bed") && !path.equals("white_bed")) {
-                DYED_TRANSFORMS.put(entry.getValue(), Blocks.WHITE_BED);
-            }
-        }
-    }
-
-    private static void dyedShulkerBox() {
-        for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
-            String path = entry.getKey().location().getPath();
-            if (path.endsWith("shulker_box") && !path.equals("shulker_box")) {
-                DYED_TRANSFORMS.put(entry.getValue(), Blocks.SHULKER_BOX);
-            }
-        }
-    }
-
-    private static void dyedCandle() {
-        for (var entry : ForgeRegistries.BLOCKS.getEntries()) {
-            String path = entry.getKey().location().getPath();
-            if (path.endsWith("_candle") && !path.equals("candle")) {
-                DYED_TRANSFORMS.put(entry.getValue(), Blocks.CANDLE);
-            }
-        }
-    }
-
-    private static void dyedBanner() {
-        // banners are items primarily; skip block banners
     }
 
     private static void registerCopper() {

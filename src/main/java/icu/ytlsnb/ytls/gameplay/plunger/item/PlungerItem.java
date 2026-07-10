@@ -17,8 +17,6 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,6 +38,10 @@ public class PlungerItem extends Item {
         if (player == null) {
             return InteractionResult.PASS;
         }
+        // Shift 时优先处理实体吸附/发射，不对方块生效
+        if (player.isShiftKeyDown()) {
+            return InteractionResult.PASS;
+        }
         ItemStack stack = context.getItemInHand();
         BlockPos pos = context.getClickedPos();
         BlockState state = level.getBlockState(pos);
@@ -59,13 +61,22 @@ public class PlungerItem extends Item {
 
     @Override
     public InteractionResult interactLivingEntity(ItemStack stack, Player player, LivingEntity entity, InteractionHand hand) {
-        if (level(player).isClientSide) {
+        if (player.level().isClientSide) {
             return InteractionResult.SUCCESS;
         }
         if (player.isShiftKeyDown()) {
-            return PlungerSuctionHandler.toggleSuction(player, stack, entity) ? InteractionResult.CONSUME : InteractionResult.FAIL;
+            if (PlungerSuctionHandler.hasSuckedEntity(stack)) {
+                return PlungerSuctionHandler.launchSucked(player, stack)
+                        ? InteractionResult.CONSUME
+                        : InteractionResult.FAIL;
+            }
+            return PlungerSuctionHandler.tryCapture(player, stack, entity)
+                    ? InteractionResult.CONSUME
+                    : InteractionResult.FAIL;
         }
-        return PlungerEntityHandler.handle(player, stack, entity) ? InteractionResult.CONSUME : InteractionResult.PASS;
+        return PlungerEntityHandler.handle(player, stack, entity)
+                ? InteractionResult.CONSUME
+                : InteractionResult.PASS;
     }
 
     @Override
@@ -75,6 +86,11 @@ public class PlungerItem extends Item {
             return InteractionResultHolder.success(stack);
         }
         if (!player.isShiftKeyDown()) {
+            // 非 Shift：对准生物也可吸（村民等会抢交互的情况）
+            LivingEntity target = findLookTarget(player, 5.0D);
+            if (target != null && PlungerEntityHandler.handle(player, stack, target)) {
+                return InteractionResultHolder.consume(stack);
+            }
             return InteractionResultHolder.pass(stack);
         }
         if (PlungerSuctionHandler.hasSuckedEntity(stack)) {
@@ -84,7 +100,7 @@ public class PlungerItem extends Item {
             return InteractionResultHolder.fail(stack);
         }
         LivingEntity target = findLookTarget(player, 5.0D);
-        if (target != null && PlungerSuctionHandler.toggleSuction(player, stack, target)) {
+        if (target != null && PlungerSuctionHandler.tryCapture(player, stack, target)) {
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.pass(stack);
@@ -111,9 +127,5 @@ public class PlungerItem extends Item {
             }
         }
         return closest;
-    }
-
-    private static Level level(Player player) {
-        return player.level();
     }
 }
