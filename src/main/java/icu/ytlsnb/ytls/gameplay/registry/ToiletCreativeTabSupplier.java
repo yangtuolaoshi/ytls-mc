@@ -20,6 +20,10 @@ public final class ToiletCreativeTabSupplier implements RegistrySupplier<Creativ
                     output.accept(RegistryAccess.item("plunger"));
                     output.accept(RegistryAccess.item("plunger_gun"));
                     output.accept(RegistryAccess.item("poop"));
+                    output.accept(RegistryAccess.item("rain_cloud"));
+                    output.accept(RegistryAccess.item("thunder_cloud"));
+                    output.accept(RegistryAccess.item("sucked_fireball"));
+                    output.accept(RegistryAccess.item("sucked_explosion"));
                 })
                 .build();
     }

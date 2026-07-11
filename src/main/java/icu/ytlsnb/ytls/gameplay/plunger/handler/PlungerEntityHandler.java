@@ -3,6 +3,7 @@ package icu.ytlsnb.ytls.gameplay.plunger.handler;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.AbstractFish;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -17,6 +18,12 @@ public final class PlungerEntityHandler {
     }
 
     public static boolean handle(Player player, ItemStack plunger, LivingEntity target) {
+        if (PlungerModeHelper.isSoundMode(plunger)) {
+            return PlungerSoundHandler.trySuckSounds(player, plunger, target);
+        }
+        if (target instanceof Creeper creeper && PlungerCreeperHandler.trySuckExplosion(player, plunger, creeper)) {
+            return true;
+        }
         if (!PlungerBlockHandler.damagePlunger(plunger, player)) {
             return false;
         }

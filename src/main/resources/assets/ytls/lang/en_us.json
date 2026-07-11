@@ -10,7 +10,19 @@
   "item.ytls.plunger_gun": "Plunger Gun",
   "item.ytls.plunger_hook": "Plunger Hook (Visual)",
   "item.ytls.poop": "Poop",
+  "item.ytls.rain_cloud": "Rain Cloud",
+  "item.ytls.thunder_cloud": "Thunder Cloud",
+  "item.ytls.sucked_fireball": "Fireball",
+  "item.ytls.sucked_explosion": "Explosion",
   "item.ytls.example_ingot": "Example Ingot",
+
+  "entity.ytls.weather_cloud": "Weather Cloud",
+  "entity.ytls.thrown_explosion": "Explosion",
+
+  "key.categories.ytls": "YTLS",
+  "key.ytls.plunger_sound_mode": "Toggle Plunger Sound Mode",
+  "message.ytls.plunger.sound_mode_on": "Plunger: Sound Mode",
+  "message.ytls.plunger.sound_mode_off": "Plunger: Normal Mode",
 
   "effect.ytls.example_brisk": "Example Brisk",
   "subtitles.ytls.example_chime": "Example chime plays",

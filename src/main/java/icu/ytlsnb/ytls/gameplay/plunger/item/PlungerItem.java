@@ -3,7 +3,10 @@ package icu.ytlsnb.ytls.gameplay.plunger.item;
 import icu.ytlsnb.ytls.framework.registry.annotation.RegisterItem;
 import icu.ytlsnb.ytls.gameplay.plunger.handler.PlungerBlockHandler;
 import icu.ytlsnb.ytls.gameplay.plunger.handler.PlungerEntityHandler;
+import icu.ytlsnb.ytls.gameplay.plunger.handler.PlungerModeHelper;
+import icu.ytlsnb.ytls.gameplay.plunger.handler.PlungerSoundHandler;
 import icu.ytlsnb.ytls.gameplay.plunger.handler.PlungerSuctionHandler;
+import icu.ytlsnb.ytls.gameplay.plunger.handler.PlungerWeatherHandler;
 import icu.ytlsnb.ytls.gameplay.toilet.block.ToiletBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -45,6 +48,10 @@ public class PlungerItem extends Item {
                     ? InteractionResult.CONSUME
                     : InteractionResult.FAIL;
         }
+        // 吸声音模式不处理方块
+        if (PlungerModeHelper.isSoundMode(stack)) {
+            return InteractionResult.PASS;
+        }
         // Shift 时优先处理实体吸附，不对方块生效
         if (player.isShiftKeyDown()) {
             return InteractionResult.PASS;
@@ -80,6 +87,11 @@ public class PlungerItem extends Item {
                     ? InteractionResult.CONSUME
                     : InteractionResult.FAIL;
         }
+        if (PlungerModeHelper.isSoundMode(stack)) {
+            return PlungerSoundHandler.trySuckSounds(player, stack, entity)
+                    ? InteractionResult.CONSUME
+                    : InteractionResult.FAIL;
+        }
         if (player.isShiftKeyDown()) {
             return PlungerSuctionHandler.tryCapture(player, stack, entity)
                     ? InteractionResult.CONSUME
@@ -103,6 +115,24 @@ public class PlungerItem extends Item {
             }
             return InteractionResultHolder.fail(stack);
         }
+
+        // 吸声音模式：对空播放已存声音
+        if (PlungerModeHelper.isSoundMode(stack)) {
+            LivingEntity lookTarget = findLookTarget(player, 5.0D);
+            if (lookTarget != null && PlungerSoundHandler.trySuckSounds(player, stack, lookTarget)) {
+                return InteractionResultHolder.consume(stack);
+            }
+            if (PlungerSoundHandler.tryPlayStoredSound(level, player, stack)) {
+                return InteractionResultHolder.consume(stack);
+            }
+            return InteractionResultHolder.pass(stack);
+        }
+
+        // 仰头 ≥60°：吸天气
+        if (!player.isShiftKeyDown() && PlungerWeatherHandler.trySuckWeather(level, player, stack)) {
+            return InteractionResultHolder.consume(stack);
+        }
+
         if (!player.isShiftKeyDown()) {
             LivingEntity target = findLookTarget(player, 5.0D);
             if (target != null && PlungerEntityHandler.handle(player, stack, target)) {

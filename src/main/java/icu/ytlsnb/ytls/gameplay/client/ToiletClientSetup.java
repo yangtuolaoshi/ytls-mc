@@ -7,9 +7,12 @@ import icu.ytlsnb.ytls.framework.registry.RegistryAccess;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryKind;
 import icu.ytlsnb.ytls.gameplay.client.model.PlungerHookModel;
 import icu.ytlsnb.ytls.gameplay.plunger.entity.PlungerHookEntity;
+import icu.ytlsnb.ytls.gameplay.plunger.entity.ThrownExplosionEntity;
+import icu.ytlsnb.ytls.gameplay.plunger.entity.WeatherCloudEntity;
 import icu.ytlsnb.ytls.gameplay.toilet.entity.ToiletSeatEntity;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.NoopRenderer;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -34,6 +37,14 @@ public final class ToiletClientSetup {
         EntityRenderers.register(
                 (net.minecraft.world.entity.EntityType<PlungerHookEntity>) RegistryAccess.resolve(RegistryKind.ENTITY, "plunger_hook"),
                 PlungerHookRenderer::new
+        );
+        EntityRenderers.register(
+                (net.minecraft.world.entity.EntityType<WeatherCloudEntity>) RegistryAccess.resolve(RegistryKind.ENTITY, "weather_cloud"),
+                WeatherCloudRenderer::new
+        );
+        EntityRenderers.register(
+                (net.minecraft.world.entity.EntityType<ThrownExplosionEntity>) RegistryAccess.resolve(RegistryKind.ENTITY, "thrown_explosion"),
+                ThrownItemRenderer::new
         );
     }
 }

@@ -13,10 +13,10 @@ public final class SkillTickHandler {
 
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
-        if (event.getEntity().level().isClientSide()) {
+        LivingEntity living = event.getEntity();
+        if (living.level().isClientSide() || living.isRemoved()) {
             return;
         }
-        LivingEntity living = event.getEntity();
         SkillCaster.tick(living);
     }
 }

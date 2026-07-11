@@ -28,6 +28,12 @@ public final class PlungerBlockHandler {
     }
 
     public static boolean handleBlock(Level level, BlockPos pos, BlockState state, Player player, ItemStack plunger) {
+        if (PlungerModeHelper.isSoundMode(plunger)) {
+            return false;
+        }
+        if (PlungerFireHandler.trySuckFire(level, pos, state, player, plunger)) {
+            return true;
+        }
         if (!damagePlunger(plunger, player)) {
             return false;
         }

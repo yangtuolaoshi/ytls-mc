@@ -5,5 +5,15 @@
   "item.ytls.plunger_gun": "马桶塞枪",
   "item.ytls.plunger_hook": "马桶塞钩（外观）",
   "item.ytls.poop": "便便",
-  "itemGroup.ytls.toilet_tab": "马桶塞"
+  "item.ytls.rain_cloud": "雨云",
+  "item.ytls.thunder_cloud": "雷雨云",
+  "item.ytls.sucked_fireball": "火球",
+  "item.ytls.sucked_explosion": "爆炸",
+  "entity.ytls.weather_cloud": "天气云",
+  "entity.ytls.thrown_explosion": "爆炸",
+  "itemGroup.ytls.toilet_tab": "马桶塞",
+  "key.categories.ytls": "YTLS",
+  "key.ytls.plunger_sound_mode": "切换马桶塞吸声音模式",
+  "message.ytls.plunger.sound_mode_on": "马桶塞：吸声音模式",
+  "message.ytls.plunger.sound_mode_off": "马桶塞：普通模式"
 }

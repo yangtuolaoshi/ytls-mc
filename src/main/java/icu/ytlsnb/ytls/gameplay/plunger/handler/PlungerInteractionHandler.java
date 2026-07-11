@@ -88,11 +88,19 @@ public final class PlungerInteractionHandler {
         }
 
         if (!(event.target() instanceof LivingEntity living) || !living.isAlive()) {
+            // 吸声音模式：允许对任意存活实体吸声音
+            if (PlungerModeHelper.isSoundMode(stack) && event.target().isAlive()) {
+                boolean sucked = PlungerSoundHandler.trySuckSounds(player, stack, event.target());
+                event.setCancelled(true);
+                event.setCancellationResult(sucked ? InteractionResult.SUCCESS : InteractionResult.FAIL);
+            }
             return;
         }
 
         boolean success;
-        if (player.isShiftKeyDown()) {
+        if (PlungerModeHelper.isSoundMode(stack)) {
+            success = PlungerSoundHandler.trySuckSounds(player, stack, living);
+        } else if (player.isShiftKeyDown()) {
             success = PlungerSuctionHandler.tryCapture(player, stack, living);
         } else {
             success = PlungerEntityHandler.handle(player, stack, living);
