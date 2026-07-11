@@ -12,6 +12,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
 import java.lang.reflect.Field;
 
@@ -33,17 +34,16 @@ public final class PlungerCreeperHandler {
 
     static {
         try {
-            Field ignited = Creeper.class.getDeclaredField("DATA_IS_IGNITED");
-            ignited.setAccessible(true);
+            // findField 需要 SRG 名：开发环境会映射到 Mojang 名，正式环境直接使用
+            // DATA_IS_IGNITED / swell / oldSwell -> f_32275_ / f_32270_ / f_32269_ (1.20.4)
+            Field ignited = ObfuscationReflectionHelper.findField(Creeper.class, "f_32275_");
             @SuppressWarnings("unchecked")
             EntityDataAccessor<Boolean> accessor = (EntityDataAccessor<Boolean>) ignited.get(null);
             DATA_IS_IGNITED = accessor;
 
-            SWELL_FIELD = Creeper.class.getDeclaredField("swell");
-            SWELL_FIELD.setAccessible(true);
-            OLD_SWELL_FIELD = Creeper.class.getDeclaredField("oldSwell");
-            OLD_SWELL_FIELD.setAccessible(true);
-        } catch (ReflectiveOperationException e) {
+            SWELL_FIELD = ObfuscationReflectionHelper.findField(Creeper.class, "f_32270_");
+            OLD_SWELL_FIELD = ObfuscationReflectionHelper.findField(Creeper.class, "f_32269_");
+        } catch (ReflectiveOperationException | RuntimeException e) {
             throw new ExceptionInInitializerError(e);
         }
     }
