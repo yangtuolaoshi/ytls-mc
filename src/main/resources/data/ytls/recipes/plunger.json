@@ -10,9 +10,9 @@
     }
   },
   "pattern": [
-    "LLL",
+    "  L",
     " S ",
-    " S "
+    "S  "
   ],
   "result": {
     "item": "ytls:plunger"
