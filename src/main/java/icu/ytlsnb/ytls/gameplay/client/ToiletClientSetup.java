@@ -1,23 +1,22 @@
 package icu.ytlsnb.ytls.gameplay.client;
 
 import icu.ytlsnb.ytls.ModConstants;
-import icu.ytlsnb.ytls.framework.bootstrap.LifecyclePhase;
-import icu.ytlsnb.ytls.framework.bootstrap.annotation.OnLifecycle;
 import icu.ytlsnb.ytls.framework.registry.RegistryAccess;
 import icu.ytlsnb.ytls.framework.registry.api.RegistryKind;
 import icu.ytlsnb.ytls.gameplay.client.model.PlungerHookModel;
-import icu.ytlsnb.ytls.gameplay.plunger.entity.PlungerHookEntity;
-import icu.ytlsnb.ytls.gameplay.plunger.entity.ThrownExplosionEntity;
-import icu.ytlsnb.ytls.gameplay.plunger.entity.WeatherCloudEntity;
-import icu.ytlsnb.ytls.gameplay.toilet.entity.ToiletSeatEntity;
-import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+/**
+ * 实体渲染必须在 {@link EntityRenderersEvent.RegisterRenderers} 注册。
+ * 在 FMLClientSetup 里 {@code EntityRenderers.register} 对联机客户端过晚，
+ * 会导致 EntityRenderDispatcher 中 renderer 为 null 并崩溃。
+ */
 @Mod.EventBusSubscriber(modid = ModConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ToiletClientSetup {
     private ToiletClientSetup() {
@@ -28,23 +27,16 @@ public final class ToiletClientSetup {
         event.registerLayerDefinition(PlungerHookModel.LAYER_LOCATION, PlungerHookModel::createBodyLayer);
     }
 
-    @OnLifecycle(LifecyclePhase.CLIENT_SETUP)
-    public static void onClientSetup() {
-        EntityRenderers.register(
-                (net.minecraft.world.entity.EntityType<ToiletSeatEntity>) RegistryAccess.resolve(RegistryKind.ENTITY, "toilet_seat"),
-                NoopRenderer::new
-        );
-        EntityRenderers.register(
-                (net.minecraft.world.entity.EntityType<PlungerHookEntity>) RegistryAccess.resolve(RegistryKind.ENTITY, "plunger_hook"),
-                PlungerHookRenderer::new
-        );
-        EntityRenderers.register(
-                (net.minecraft.world.entity.EntityType<WeatherCloudEntity>) RegistryAccess.resolve(RegistryKind.ENTITY, "weather_cloud"),
-                WeatherCloudRenderer::new
-        );
-        EntityRenderers.register(
-                (net.minecraft.world.entity.EntityType<ThrownExplosionEntity>) RegistryAccess.resolve(RegistryKind.ENTITY, "thrown_explosion"),
-                ThrownItemRenderer::new
-        );
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(entity("toilet_seat"), NoopRenderer::new);
+        event.registerEntityRenderer(entity("plunger_hook"), PlungerHookRenderer::new);
+        event.registerEntityRenderer(entity("weather_cloud"), WeatherCloudRenderer::new);
+        event.registerEntityRenderer(entity("thrown_explosion"), ThrownItemRenderer::new);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends net.minecraft.world.entity.Entity> EntityType<T> entity(String name) {
+        return (EntityType<T>) RegistryAccess.resolve(RegistryKind.ENTITY, name);
     }
 }
