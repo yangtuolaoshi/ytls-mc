@@ -23,6 +23,8 @@ public enum GameEventType {
     CHUNK_LOAD,
     DIMENSION_CHANGE,
     ITEM_USE,
+    RIGHT_CLICK_BLOCK,
+    ENTITY_INTERACT,
     CONFIG_RELOAD,
     RESOURCE_RELOAD
 }
